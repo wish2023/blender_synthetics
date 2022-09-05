@@ -312,24 +312,9 @@ if __name__ == "__main__":
         add_sun()
         add_camera()
 
-        tank_count = 2 #random.randrange(5, 10) 
-#        object_counts = hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
+        tank_count = 5 #random.randrange(5, 10) 
+        hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
 
-        EPSILON = 0.0000001 # the epsilon value for the BVHTree calculations
-        MAXIMUM_Z = 1000 # maximum ray distance XY plane
-        landscape = bpy.data.objects["Plane"]
-
-         # create the BVHTrees from a bmesh of the "sticky" object
-         # the bmesh conversion makes it easy to apply the individual objects transformation matrices
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        bm = bmesh.new()
-        bm.from_object(landscape, depsgraph)
-        bmesh.ops.transform(bm, matrix=landscape.matrix_world, verts=bm.verts)
-        bvhtree = BVHTree.FromBMesh(bm, epsilon=EPSILON)
-
-        obj_list = []
-        createCopies(small_vehicles_namelist, tank_count, bvhtree, is_target=True, cat_id=1)
-        
         # print(i)
         render(render_name)
     
