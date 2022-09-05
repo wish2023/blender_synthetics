@@ -32,7 +32,8 @@ if not os.path.isdir(obb_labels_path):
 for img_name in os.listdir(seg_maps_path):
 
     ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
-        "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
+        "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
+        "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
 
     seg_map = Image.open(os.path.join(seg_maps_path, img_name))
     seg_map = np.array(np.asarray(seg_map))
