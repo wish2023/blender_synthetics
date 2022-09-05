@@ -273,6 +273,11 @@ def render(render_name="synthetics.png"):
     img_path = os.path.join(render_path, "img")
     seg_path = os.path.join(render_path, "seg_maps")
     
+    if not os.path.isdir(img_path):
+        os.mkdir(img_path)
+    if not os.path.isdir(seg_path):
+        os.mkdir(seg_path)
+    
     result = bpycv.render_data()
     
     
