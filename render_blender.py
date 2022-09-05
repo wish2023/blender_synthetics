@@ -294,14 +294,14 @@ if __name__ == "__main__":
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
     
-    tank_objects_namelist = get_object_names(tank_folder_path)
+    small_vehicles_namelist = get_object_names(tank_folder_path)
     #plant_objects_namelist = get_object_names(plant_folder_path)
     
     for i in range(1):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
-        for obj_name in tank_objects_namelist:
+        for obj_name in small_vehicles_namelist:
             bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
         
@@ -310,8 +310,8 @@ if __name__ == "__main__":
         add_sun()
         add_camera()
 
-        tank_count = random.randrange(5, 10) 
-#        createCopies2(tank_objects_namelist, tank_count, 1.3)
+        tank_count = 2 #random.randrange(5, 10) 
+#        object_counts = hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
 
         EPSILON = 0.0000001 # the epsilon value for the BVHTree calculations
         MAXIMUM_Z = 1000 # maximum ray distance XY plane
@@ -326,8 +326,8 @@ if __name__ == "__main__":
         bvhtree = BVHTree.FromBMesh(bm, epsilon=EPSILON)
 
         obj_list = []
-        createCopies(tank_objects_namelist, tank_count, bvhtree, is_target=True, cat_id=1)
+        createCopies(small_vehicles_namelist, tank_count, bvhtree, is_target=True, cat_id=1)
         
-        print(i)
-#        render(render_name)
+        # print(i)
+        render(render_name)
     
