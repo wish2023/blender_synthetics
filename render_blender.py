@@ -136,58 +136,59 @@ def get_object_names(folder_path):
     return object_names
 
 
-def createCopies2(namelist, num, tank_particle_scale):
-    objects = bpy.data.objects
-    obj_num = 0
-    for obj_name in namelist:
-        plane = objects["Plane"]
-        bpy.context.view_layer.objects.active = plane
-        bpy.ops.object.particle_system_add()
-        
-#        if objects[i].name.startswith('Leo2A4') or objects[i].name.startswith('M142'): # to use list of strings instead
-        particle_count = num
-        particle_scale = tank_particle_scale
-        if obj_num==0:
-            particle_sys_name = "ParticleSystem" 
-            particle_settings_name = "ParticleSettings"
-            ps_name = bpy.data.particles[particle_settings_name].name = "ps" 
-        else:
-            particle_sys_name = "ParticleSystem." + str(obj_num).zfill(3)
-            ps_name = bpy.data.particles[particle_settings_name].name = "ps" + str(obj_num) 
-        ob = objects[obj_name] ## #FIX
-        #ps_name = "ps1"
-        bpy.data.particles[ps_name].type = "HAIR"
-        bpy.data.particles[ps_name].use_advanced_hair = True
-        # EMISSION
-        bpy.data.particles[ps_name].count = particle_count # param
-        bpy.data.objects["Plane"].particle_systems[particle_sys_name].seed = obj_num # param(?) # seed to change random locations of particles
+def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
+            objects = bpy.data.objects
+            plane = objects["Plane"]
+            for obj_name in namelist:
+                obj = objects[obj_name]
 
-        #RENDER
-        bpy.data.particles[ps_name].render_type = "OBJECT"
-        bpy.data.objects["Plane"].show_instancer_for_render = False # don't show emitter
-        bpy.data.particles[ps_name].instance_object = ob #"tree1.001" #obj name will be the foilage object
-        bpy.data.particles[ps_name].particle_size = particle_scale # param (0.1 to 0.5?)
+                bpy.context.view_layer.objects.active = plane
+                bpy.ops.object.particle_system_add()
+                
+                objects[obj_name].rotation_euler.y += math.radians(90)
+                particle_count = count
+                particle_scale = scale
 
-        
-        bpy.data.particles[ps_name].use_scale_instance = True
-        bpy.data.particles[ps_name].use_rotation_instance = True
-        bpy.data.particles[ps_name].use_global_instance = True
+                ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
+                psys = plane.particle_systems[ps.name]
 
-        
-        # ROTATION
-        bpy.data.particles[ps_name].use_rotations = True # param
-        bpy.data.particles[ps_name].rotation_mode = "GLOB_Z"
-        bpy.data.particles[ps_name].phase_factor_random = 2.0 # param (0 to 2.0)
-        #bpy.data.particles["ParticleSettings.022"].phase_factor # param  phase (-1 to 1)
-        # Do this for very dense forest
-        bpy.data.particles[ps_name].child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
-        obj_num +=1
-        
-        plane = bpy.data.objects["Plane"] 
-        bpy.context.view_layer.objects.active = plane
-        plane.select_set(True)
-        ## IMPT STEP: to convert particles to individual meshes! 
-        bpy.ops.object.duplicates_make_real()
+                psys.settings.type = "HAIR"
+                psys.settings.use_advanced_hair = True
+
+                # EMISSION
+                psys.settings.count = particle_count # param
+                psys.settings.hair_length = scale # param
+                psys.seed = random.randrange(100)
+
+                # #RENDER
+                psys.settings.render_type = "OBJECT"
+                plane.show_instancer_for_render = True
+                psys.settings.instance_object = obj
+                psys.settings.particle_size = particle_scale
+                
+                psys.settings.use_scale_instance = True
+                psys.settings.use_rotation_instance = True
+                psys.settings.use_global_instance = True
+                
+                # # ROTATION
+                psys.settings.use_rotations = True # param
+                psys.settings.rotation_mode = "GLOB_Z"
+                psys.settings.phase_factor_random = 2.0 # param (0 to 2.0)
+                psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
+                
+            plane.select_set(True)
+            bpy.ops.object.duplicates_make_real()
+
+            start_ind = 1
+            for obj_name in namelist:
+                end_ind = start_ind + count
+                for i in range(start_ind, end_ind):
+                    obj_inst = obj_name + "." + str(i-start_ind+1).zfill(3)
+                    obj = objects[obj_inst]
+                    obj.hide_render = False
+                    obj["inst_id"] = cat_id * 1000 + i
+                    print(obj_inst, cat_id * 1000 + i)
+                start_ind = end_ind
 
 
 def createCopies(namelist, num, bvhtree, is_target=False, cat_id=None): # namelist - All fbx models in same class
