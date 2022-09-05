@@ -132,6 +132,7 @@ def get_object_names(folder_path):
         object_names.append(obj_name)
         bpy.ops.object.select_all(action='DESELECT') # May be redundant
         bpy.data.objects[obj_name].hide_render = True
+        bpy.data.objects[obj_name].rotation_euler.y += math.radians(90)
         
     return object_names
 
@@ -140,12 +141,11 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             objects = bpy.data.objects
             plane = objects["Plane"]
             for obj_name in namelist:
-                obj_copy = objects[obj_name]
+                obj = objects[obj_name]
 
                 bpy.context.view_layer.objects.active = plane
                 bpy.ops.object.particle_system_add()
                 
-                objects[obj_name].rotation_euler.y += math.radians(90)
                 particle_count = count
                 particle_scale = scale
 
@@ -163,7 +163,7 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
                 # #RENDER
                 psys.settings.render_type = "OBJECT"
                 plane.show_instancer_for_render = True
-                psys.settings.instance_object = obj_copy
+                psys.settings.instance_object = obj
                 psys.settings.particle_size = particle_scale
                 
                 psys.settings.use_scale_instance = True
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     small_vehicles_namelist = get_object_names(tank_folder_path)
     #plant_objects_namelist = get_object_names(plant_folder_path)
     
-    for i in range(1):
+    for i in range(2):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
