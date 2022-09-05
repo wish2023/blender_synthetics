@@ -15,6 +15,19 @@ img_path = "/home/vishesh/Desktop/synthetics/results/img"
 yolo_labels_path = "/home/vishesh/Desktop/synthetics/results/yolo_labels"
 obb_labels_path = "/home/vishesh/Desktop/synthetics/results/obb_labels"
 
+if not os.path.isdir(seg_maps_path):
+    os.mkdir(seg_maps_path)
+if not os.path.isdir(yolo_annotated_path):
+    os.mkdir(yolo_annotated_path)
+if not os.path.isdir(obb_annotated_path):
+    os.mkdir(obb_annotated_path)
+if not os.path.isdir(img_path):
+    os.mkdir(img_path)
+if not os.path.isdir(yolo_labels_path):
+    os.mkdir(yolo_labels_path)
+if not os.path.isdir(obb_labels_path):
+    os.mkdir(obb_labels_path)
+
 
 for img_name in os.listdir(seg_maps_path):
 
