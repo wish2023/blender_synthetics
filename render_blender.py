@@ -140,7 +140,7 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             objects = bpy.data.objects
             plane = objects["Plane"]
             for obj_name in namelist:
-                obj = objects[obj_name]
+                obj_copy = objects[obj_name]
 
                 bpy.context.view_layer.objects.active = plane
                 bpy.ops.object.particle_system_add()
@@ -163,7 +163,7 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
                 # #RENDER
                 psys.settings.render_type = "OBJECT"
                 plane.show_instancer_for_render = True
-                psys.settings.instance_object = obj
+                psys.settings.instance_object = obj_copy
                 psys.settings.particle_size = particle_scale
                 
                 psys.settings.use_scale_instance = True
@@ -173,7 +173,7 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
                 # # ROTATION
                 psys.settings.use_rotations = True # param
                 psys.settings.rotation_mode = "GLOB_Z"
-                psys.settings.phase_factor_random = 2.0 # param (0 to 2.0)
+                psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
                 psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
                 
             plane.select_set(True)
@@ -181,12 +181,14 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
 
             start_ind = 1
             for obj_name in namelist:
+                obj = objects[obj_name]
                 end_ind = start_ind + count
                 for i in range(start_ind, end_ind):
                     obj_inst = obj_name + "." + str(i-start_ind+1).zfill(3)
-                    obj = objects[obj_inst]
-                    obj.hide_render = False
-                    obj["inst_id"] = cat_id * 1000 + i
+                    obj_copy = objects[obj_inst]
+                    obj_copy.data = obj.data.copy()
+                    obj_copy["inst_id"] = cat_id * 1000 + i
+                    obj_copy.hide_render = False
                     print(obj_inst, cat_id * 1000 + i)
                 start_ind = end_ind
 
