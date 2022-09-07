@@ -51,6 +51,10 @@ for img_name in os.listdir(seg_maps_path):
         
         points = cv2.findNonZero((seg_map == inst).astype(int))
         x, y, w, h = cv2.boundingRect(points)
+
+        if x == 0 or y == 0 or x+w == img.shape[1]-1 or y+h == img.shape[0]-1: # bounding box on edge, object partially not in frame
+            continue
+
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
 
