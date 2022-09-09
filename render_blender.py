@@ -1,4 +1,3 @@
-from unittest import case
 import bpy
 import bpycv
 from bpy import context
@@ -148,61 +147,59 @@ def get_object_names(folder_path):
 
 def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             objects = bpy.data.objects
-            plane = objects["Plane"]
-            for obj_name in namelist:
-                obj = objects[obj_name]
+            plane = objects["Plane"] 
 
-                bpy.context.view_layer.objects.active = plane
-                bpy.ops.object.particle_system_add()
-                
-                particle_count = count
-                particle_scale = scale
+            bpy.context.view_layer.objects.active = plane
+            bpy.ops.object.particle_system_add()
+            
+            particle_count = count
+            particle_scale = scale
 
-                ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
-                psys = plane.particle_systems[ps.name]
+            ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
+            psys = plane.particle_systems[ps.name]
 
-                psys.settings.type = "HAIR"
-                psys.settings.use_advanced_hair = True
+            psys.settings.type = "HAIR"
+            psys.settings.use_advanced_hair = True
 
-                # EMISSION
-                seed = random.randrange(10000)
-                print("Seed", seed)
-                psys.settings.count = particle_count # param
-                psys.settings.hair_length = scale # param
-                psys.seed = seed
+            # EMISSION
+            seed = random.randrange(10000)
+            print("Seed", seed)
+            psys.settings.count = particle_count # param
+            psys.settings.hair_length = particle_scale # param
+            psys.seed = seed
 
-                # #RENDER
-                psys.settings.render_type = "OBJECT"
-                plane.show_instancer_for_render = False
-                psys.settings.instance_object = obj
-                psys.settings.particle_size = particle_scale
-                
-                psys.settings.use_scale_instance = True
-                psys.settings.use_rotation_instance = True
-                psys.settings.use_global_instance = True
-                
-                # # ROTATION
-                psys.settings.use_rotations = True # param
-                psys.settings.rotation_mode = "GLOB_Z"
-                psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
-                psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
+            # #RENDER
+            psys.settings.render_type = "COLLECTION"
+            plane.show_instancer_for_render = True
+            psys.settings.instance_collection = bpy.data.collections["Objects"]
+            psys.settings.particle_size = particle_scale
+            
+            psys.settings.use_scale_instance = True
+            psys.settings.use_rotation_instance = True
+            psys.settings.use_global_instance = True
+            
+            # # ROTATION
+            psys.settings.use_rotations = True # param
+            psys.settings.rotation_mode = "GLOB_Z"
+            psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
+            psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
                 
             plane.select_set(True)
             bpy.ops.object.duplicates_make_real()
 #            plane.modifiers.remove(ps)
 
-            start_ind = 1
-            for obj_name in namelist:
-                obj = objects[obj_name]
-                end_ind = start_ind + count
-                for i in range(start_ind, end_ind):
-                    obj_inst = obj_name + "." + str(i-start_ind+1).zfill(3)
-                    obj_copy = objects[obj_inst]
-                    obj_copy.data = obj.data.copy()
-                    obj_copy["inst_id"] = cat_id * 1000 + i
-                    obj_copy.hide_render = False
-#                    print(obj_inst, cat_id * 1000 + i)
-                start_ind = end_ind
+#            start_ind = 1
+#            for obj_name in namelist:
+#                obj = objects[obj_name]
+#                end_ind = start_ind + count
+#                for i in range(start_ind, end_ind):
+#                    obj_inst = obj_name + "." + str(i-start_ind+1).zfill(3)
+#                    obj_copy = objects[obj_inst]
+#                    obj_copy.data = obj.data.copy()
+#                    obj_copy["inst_id"] = cat_id * 1000 + i
+#                    obj_copy.hide_render = False
+##                    print(obj_inst, cat_id * 1000 + i)
+#                start_ind = end_ind
 
         
 
@@ -237,21 +234,21 @@ if __name__ == "__main__":
     small_vehicles_namelist = get_object_names(tank_folder_path)
     #plant_objects_namelist = get_object_names(plant_folder_path)
     
-#    for i in range(1):
-#        render_name = "synthetics" + str(i) + ".png"
-#        
-#        bpy.ops.object.select_all(action='SELECT')
-#        for obj_name in small_vehicles_namelist:
-#            bpy.data.objects[obj_name].select_set(False)
-#        bpy.ops.object.delete()
-#        
-#        plane_size = 120
-#        create_plane(plane_size)
-#        add_sun()
-#        add_camera()
+    for i in range(1):
+        render_name = "synthetics" + str(i) + ".png"
+        
+        bpy.ops.object.select_all(action='SELECT')
+        for obj_name in small_vehicles_namelist:
+            bpy.data.objects[obj_name].select_set(False)
+        bpy.ops.object.delete()
+        
+        plane_size = 120
+        create_plane(plane_size)
+        add_sun()
+        add_camera()
 
-#        tank_count = 1 #random.randrange(3, 5) 
-#        hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
+        tank_count = 2 #random.randrange(3, 5) 
+        hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
 
         # print(i)
 #        render(render_name)
