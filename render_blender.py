@@ -138,7 +138,7 @@ def get_object_names(folder_path):
         
         for coll in object.users_collection:
             coll.objects.unlink(object)
-        context.scene.collection.children.get("Objects").objects.link(object)
+        context.scene.collection.children.get("Models").objects.link(object)
         
         
         
@@ -171,7 +171,7 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             # #RENDER
             psys.settings.render_type = "COLLECTION"
             plane.show_instancer_for_render = True
-            psys.settings.instance_collection = bpy.data.collections["Objects"]
+            psys.settings.instance_collection = bpy.data.collections["Models"]
             psys.settings.particle_size = particle_scale
             
             psys.settings.use_scale_instance = True
@@ -186,10 +186,22 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
                 
             plane.select_set(True)
             bpy.ops.object.duplicates_make_real()
-#            plane.modifiers.remove(ps)
+            plane.modifiers.remove(ps)
+            
+            objs = bpy.context.selected_objects
+            coll_target = bpy.context.scene.collection.children.get("Instances")
+            for ob in objs:
+                for coll in ob.users_collection:
+                    # Unlink the object
+                    coll.objects.unlink(ob)
+
+                # Link each object to the target collection
+                coll_target.objects.link(ob)
+            
+            
 
 #            start_ind = 1
-#            for obj_name in namelist:
+#            for obj_name in namelist: # change naming conventions? Maybe move them into a new collection?
 #                obj = objects[obj_name]
 #                end_ind = start_ind + count
 #                for i in range(start_ind, end_ind):
@@ -228,13 +240,15 @@ if __name__ == "__main__":
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
     
-    collection = bpy.data.collections.new("Objects")
+    collection = bpy.data.collections.new("Models")
     bpy.context.scene.collection.children.link(collection)
+    collection2 = bpy.data.collections.new("Instances")
+    bpy.context.scene.collection.children.link(collection2)
     
     small_vehicles_namelist = get_object_names(tank_folder_path)
     #plant_objects_namelist = get_object_names(plant_folder_path)
     
-    for i in range(1):
+    for i in range(2):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
@@ -247,9 +261,9 @@ if __name__ == "__main__":
         add_sun()
         add_camera()
 
-        tank_count = 2 #random.randrange(3, 5) 
+        tank_count = 20 #random.randrange(3, 5) 
         hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
 
         # print(i)
-#        render(render_name)
+        render(render_name)
     
