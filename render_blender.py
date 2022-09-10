@@ -9,9 +9,7 @@ import math
 import os
 import random
 
-import bmesh
-from mathutils.bvhtree import BVHTree
-import mathutils
+
 
 def create_plane(plane_size=500):
     subdivide_count = 100
@@ -145,6 +143,9 @@ def get_object_names(folder_path):
     return object_names
 
 
+def get_cat_id(obj_name):
+    pass
+
 def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             objects = bpy.data.objects
             plane = objects["Plane"] 
@@ -190,14 +191,15 @@ def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
             
             objs = bpy.context.selected_objects
             coll_target = bpy.context.scene.collection.children.get("Instances")
-            for ob in objs:
-                for coll in ob.users_collection:
-                    # Unlink the object
-                    coll.objects.unlink(ob)
-
-                # Link each object to the target collection
-                coll_target.objects.link(ob)
-            
+            for obj in objs:
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                coll_target.objects.link(obj)
+                obj_copy = obj
+                obj_copy.data = obj.data.copy()
+                obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i
+                obj_copy.hide_render = False
+      
             
 
 #            start_ind = 1
