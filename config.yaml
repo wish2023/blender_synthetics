@@ -1,0 +1,11 @@
+occlusion_aware: True
+
+min_camera_height: 200
+max_camera_height: 250
+min_camera_tilt: 0
+max_camera_tilt: 30
+
+min_sun_energy: 1
+max_sun_energy: 10
+min_sun_tilt: 0
+max_sun_tilt: 70

@@ -22,7 +22,7 @@ python3 render_blender.py
 ## Custom Synthetics
 
 ```
-python3 render_blender.py --model model.yaml --config config.yaml
+python3 render_blender.py --models models.yaml --config config.yaml
 ```
 
 ### Scene
