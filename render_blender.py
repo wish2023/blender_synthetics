@@ -241,7 +241,7 @@ def render(render_name="synthetics.png"):
 
 
 if __name__ == "__main__":
-    car2_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
+    car_folder_path2 = "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
     car_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
     render_path = "/home/vishesh/Desktop/synthetics/results"
 
