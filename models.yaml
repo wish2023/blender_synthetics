@@ -4,6 +4,6 @@ classes:
 
 obstacles: path/to/all/obstacles
 
-scenes: "/home/vishesh/Downloads/terrain" # optional
+scenes: "/home/vishesh/Downloads/all_textures" # optional
 
 render_to: "/home/vishesh/Desktop/synthetics/results"

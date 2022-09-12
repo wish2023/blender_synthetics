@@ -1,8 +1,7 @@
-# import bpy
-# import bpycv
-# from bpy import context
+import bpy
+import bpycv
+from bpy import context
 
-import re
 import cv2
 import numpy as np
 import math
@@ -302,13 +301,13 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
 if __name__ == "__main__":
 
-    with open("models.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/models.yaml") as file:
         models_info = yaml.load(file, Loader=yaml.FullLoader)
-    with open("config.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config.yaml") as file:
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
-    scenes_list = os.listdir(models_info["scenes"])
+    scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])]
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
     min_camera_height = config_info["min_camera_height"]
@@ -335,7 +334,7 @@ if __name__ == "__main__":
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
     
-    for i in range(1):
+    for i in range(5):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
