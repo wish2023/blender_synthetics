@@ -255,6 +255,7 @@ def hair_emission(count, scale):
             # # ROTATION
             psys.settings.use_rotations = True # param
             psys.settings.rotation_mode = "GLOB_Z"
+            psys.settings.rotation_mode = "NOR" # "GLOB_Z"
             psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
             psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
                 
