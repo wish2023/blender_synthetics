@@ -7,6 +7,7 @@ import cv2
 from PIL import Image
 
 view_annotations = True
+occlusion_aware = True
 
 seg_maps_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
 yolo_annotated_path = "/home/vishesh/Desktop/synthetics/results/yolo_annotated"
@@ -14,6 +15,8 @@ obb_annotated_path = "/home/vishesh/Desktop/synthetics/results/obb_annotated"
 img_path = "/home/vishesh/Desktop/synthetics/results/img"
 yolo_labels_path = "/home/vishesh/Desktop/synthetics/results/yolo_labels"
 obb_labels_path = "/home/vishesh/Desktop/synthetics/results/obb_labels"
+
+color = {0: (0,0,255), 1: (0,255,0)}
 
 if not os.path.isdir(seg_maps_path):
     os.mkdir(seg_maps_path)
@@ -52,15 +55,15 @@ for img_name in os.listdir(seg_maps_path):
         points = cv2.findNonZero((seg_map == inst).astype(int))
         x, y, w, h = cv2.boundingRect(points)
 
-        if x == 0 or y == 0 or x+w == img.shape[1]-1 or y+h == img.shape[0]-1: # bounding box on edge, object partially not in frame
+        if occlusion_aware == False and (x == 0 or y == 0 or x+w == img.shape[1]-1 or y+h == img.shape[0]-1): # bounding box on edge, object partially not in frame
             continue
 
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
 
         if view_annotations:
-            img_bb = cv2.rectangle(img_bb, (x, y), (x+w, y+h), color=(0,0,255), thickness=2)
-            img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=(0, 0, 255), thickness=2)
+            img_bb = cv2.rectangle(img_bb, (x, y), (x+w, y+h), color=color[cat_id], thickness=2)
+            img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=color[cat_id], thickness=2)
 
         ann["cat_id"].append(cat_id) 
         ann["xc"].append((x + w/2) / img_w)
