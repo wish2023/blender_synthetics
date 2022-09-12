@@ -7,11 +7,12 @@ import numpy as np
 import math
 
 import os
+import glob
 import random
 
 
 
-def create_plane(plane_size=500):
+def create_plane(plane_size=500, texture_path=None):
     subdivide_count = 100
     bpy.ops.mesh.primitive_plane_add(size=plane_size, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     bpy.ops.object.editmode_toggle()
@@ -22,12 +23,85 @@ def create_plane(plane_size=500):
 
     bpy.ops.object.editmode_toggle()
 
-#    tex = bpy.data.textures.new("Voronoi", 'VORONOI')
-#    tex.distance_metric = 'DISTANCE_SQUARED'
-#    modifier = plane.modifiers.new(name="Displace", type='DISPLACE')
-#    modifier.texture = bpy.data.textures['Voronoi']
-#    modifier.strength = random.randint(1,4)
-#    bpy.ops.object.modifier_apply(modifier='Displace')
+    if texture_path:
+        generate_texture(texture_path)
+    else:
+        generate_random_background()
+        
+def generate_texture(texture_path):
+    # img_tex = "/home/vishesh/Downloads/terrain/aerial_rocks_04_diff_4k.jpg"
+    # img_rough = "/home/vishesh/Downloads/terrain/aerial_rocks_04_rough_4k.jpg"
+    # img_norm = "/home/vishesh/Downloads/terrain/aerial_rocks_04_nor_gl_4k.exr"
+    # img_dis = "/home/vishesh/Downloads/terrain/aerial_rocks_04_disp_4k.png"
+
+    img_tex = glob.glob(os.path.join(texture_path, "*_diff_*"))[0]
+    img_rough = glob.glob(os.path.join(texture_path, "*_rough_*"))[0]
+    img_norm = glob.glob(os.path.join(texture_path, "*_nor_gl_*"))[0]
+    img_dis = glob.glob(os.path.join(texture_path, "*_disp_*"))[0]
+
+
+    material_basic = bpy.data.materials.new(name="Basic")
+    material_basic.use_nodes = True
+    bpy.context.object.active_material = material_basic
+    nodes = material_basic.node_tree.nodes
+
+
+    principled_node = material_basic.node_tree.nodes.get("Principled BSDF")
+    node_out = material_basic.node_tree.nodes.get("Material Output")
+
+    node_tex = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_tex.image = bpy.data.images.load(img_tex)
+    node_tex.location = (-700, 800)
+
+    node_rough = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_rough.image = bpy.data.images.load(img_rough)
+    node_rough.location = (-700, 500)
+
+    node_norm = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_norm.image = bpy.data.images.load(img_norm)
+    node_norm.location = (-700, 200)
+
+    node_dis = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_dis.image = bpy.data.images.load(img_dis)
+    node_dis.location = (-700, -100)
+
+    norm_map = material_basic.node_tree.nodes.new('ShaderNodeNormalMap')
+    norm_map.location = (-250, 0)
+
+    node_disp = material_basic.node_tree.nodes.new('ShaderNodeDisplacement')
+    node_disp.location = (0, -450)
+
+    node_tex_coor = material_basic.node_tree.nodes.new('ShaderNodeTexCoord')
+    node_tex_coor.location = (-1400, 500)
+
+    node_map = material_basic.node_tree.nodes.new('ShaderNodeMapping')
+    node_map.location = (-1200, 500)
+
+    link = material_basic.node_tree.links.new
+    link(node_tex.outputs["Color"], principled_node.inputs["Base Color"])
+    link(node_rough.outputs["Color"], principled_node.inputs["Roughness"])
+    link(node_norm.outputs["Color"], norm_map.inputs["Color"])
+    link(node_dis.outputs["Color"], node_disp.inputs["Height"])
+
+    link(node_tex_coor.outputs["UV"], node_map.inputs["Vector"])
+    link(node_map.outputs["Vector"], node_tex.inputs["Vector"])
+    link(node_map.outputs["Vector"], node_rough.inputs["Vector"])
+    link(node_map.outputs["Vector"], node_norm.inputs["Vector"])
+    link(node_map.outputs["Vector"], node_dis.inputs["Vector"])
+
+    link(norm_map.outputs["Normal"], principled_node.inputs["Normal"])
+    link(node_disp.outputs["Displacement"], node_out.inputs["Displacement"])
+
+
+
+
+def generate_random_background():
+    # tex = bpy.data.textures.new("Voronoi", 'VORONOI')
+    # tex.distance_metric = 'DISTANCE_SQUARED'
+    # modifier = plane.modifiers.new(name="Displace", type='DISPLACE')
+    # modifier.texture = bpy.data.textures['Voronoi']
+    # modifier.strength = random.randint(1,4)
+    # bpy.ops.object.modifier_apply(modifier='Displace')
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
@@ -73,8 +147,6 @@ def create_plane(plane_size=500):
     for i in range(num_elements):     
         colorramp_node.color_ramp.elements[i].position = i * (1 / (num_elements-1))
         colorramp_node.color_ramp.elements[i].color = (random.random(), random.random(), random.random(),1)
-        
-
 
 def add_sun():
     min_sun_energy = 1
@@ -231,6 +303,7 @@ if __name__ == "__main__":
     car_folder_path2 = "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
     car_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
     render_path = "/home/vishesh/Desktop/synthetics/results"
+    texture_path = "/home/vishesh/Downloads/terrain"
 
     classes_list = [car_folder_path, car_folder_path2]
     
@@ -260,7 +333,7 @@ if __name__ == "__main__":
         bpy.ops.object.delete()
         
         plane_size = 120
-        create_plane(plane_size)
+        create_plane(plane_size, texture_path=texture_path)
         add_sun()
         add_camera()
 
