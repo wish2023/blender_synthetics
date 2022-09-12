@@ -274,7 +274,8 @@ def hair_emission(count, scale):
                 obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i + 1 # cannot have inst_id = 0
                 obj_copy.hide_render = False
 
-
+def hide_obstacles():
+    pass
 
 def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
@@ -289,8 +290,14 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     
     result = bpycv.render_data()
 
+    if occlusion_aware:
+        cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(result["inst"]))
+    else:
+        hide_obstacles()
+        hidden_obstacles_result = bpycv.render_data()
+        cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(hidden_obstacles_result["inst"]))
+
     cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
-    cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(result["inst"]))
 
 
 if __name__ == "__main__":
