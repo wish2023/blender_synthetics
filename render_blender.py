@@ -253,11 +253,10 @@ def hair_emission(count, scale):
             psys.settings.use_global_instance = True
             
             # # ROTATION
-            psys.settings.use_rotations = True # param
-            psys.settings.rotation_mode = "GLOB_Z"
+            psys.settings.use_rotations = True
             psys.settings.rotation_mode = "NOR" # "GLOB_Z"
             psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
-            psys.settings.child_type = "NONE" # param default = "NONE", or "SIMPLE" or "INTERPOLATED"
+            psys.settings.child_type = "NONE"
                 
             plane.select_set(True)
             bpy.ops.object.duplicates_make_real()
