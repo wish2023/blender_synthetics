@@ -159,7 +159,7 @@ def add_sun(min_sun_energy, max_sun_energy, min_sun_tilt):
     bpy.context.scene.objects["Sun"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
     
-def add_camera(min_camera_height, max_camera_height, min_camera_tilt):
+def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
 
     z = random.randrange(min_camera_height, max_camera_height)
     bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
