@@ -7,7 +7,7 @@ import cv2
 from PIL import Image
 
 view_annotations = True
-occlusion_aware = True
+occlusion_aware = False
 
 seg_maps_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
 yolo_annotated_path = "/home/vishesh/Desktop/synthetics/results/yolo_annotated"
@@ -18,14 +18,11 @@ obb_labels_path = "/home/vishesh/Desktop/synthetics/results/obb_labels"
 
 color = {0: (0,0,255), 1: (0,255,0)}
 
-if not os.path.isdir(seg_maps_path):
-    os.mkdir(seg_maps_path)
+
 if not os.path.isdir(yolo_annotated_path):
     os.mkdir(yolo_annotated_path)
 if not os.path.isdir(obb_annotated_path):
     os.mkdir(obb_annotated_path)
-if not os.path.isdir(img_path):
-    os.mkdir(img_path)
 if not os.path.isdir(yolo_labels_path):
     os.mkdir(yolo_labels_path)
 if not os.path.isdir(obb_labels_path):
@@ -55,8 +52,8 @@ for img_name in os.listdir(seg_maps_path):
         points = cv2.findNonZero((seg_map == inst).astype(int))
         x, y, w, h = cv2.boundingRect(points)
 
-        if occlusion_aware == False and (x == 0 or y == 0 or x+w == img.shape[1]-1 or y+h == img.shape[0]-1): # bounding box on edge, object partially not in frame
-            continue
+        if occlusion_aware == False and (x == 0 or y == 0 or x+w == img.shape[1] or y+h == img.shape[0]): # bounding box on edge, object partially not in frame
+            continue # re-adjust bb if occlusion_aware, so that OBBs don't extend image
 
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
