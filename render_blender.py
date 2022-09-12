@@ -150,7 +150,7 @@ def get_object_names(class_path, class_name):
 
 
 def get_cat_id(obj_name):
-    return class_ids[parent_class[obj_name]]
+    return class_ids[parent_class[obj_name.split('.')[0]]]
 
 def hair_emission(count, scale, occlusion_aware=True):
             objects = bpy.data.objects
@@ -197,29 +197,16 @@ def hair_emission(count, scale, occlusion_aware=True):
             
             objs = bpy.context.selected_objects
             coll_target = bpy.context.scene.collection.children.get("Instances")
-            for obj in objs:
+            for i, obj in enumerate(objs):
                 for coll in obj.users_collection:
                     coll.objects.unlink(obj)
                 coll_target.objects.link(obj)
                 obj_copy = obj
                 obj_copy.data = obj.data.copy()
-                obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i
+                obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i + 1 # cannot have inst_id = 0
                 obj_copy.hide_render = False
-      
-            
 
-#            start_ind = 1
-#            for obj_name in namelist: # change naming conventions? Maybe move them into a new collection?
-#                obj = objects[obj_name]
-#                end_ind = start_ind + count
-#                for i in range(start_ind, end_ind):
-#                    obj_inst = obj_name + "." + str(i-start_ind+1).zfill(3)
-#                    obj_copy = objects[obj_inst]
-#                    obj_copy.data = obj.data.copy()
-#                    obj_copy["inst_id"] = cat_id * 1000 + i
-#                    obj_copy.hide_render = False
-##                    print(obj_inst, cat_id * 1000 + i)
-#                start_ind = end_ind
+      
 
         
 
@@ -259,15 +246,15 @@ if __name__ == "__main__":
     class_ids = {}
     parent_class = {}
     for i, class_path in enumerate(classes_list):
-        class_name = os.path.basename(class_path)
+        class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
     
-    for i in range(2):
+    for i in range(5):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
-        for id, class_name in class_ids.items():
+        for class_name in class_ids:
             for obj_name in objects_dict[class_name]:
                 bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
@@ -277,8 +264,8 @@ if __name__ == "__main__":
         add_sun()
         add_camera()
 
-        object_count = 3 #random.randrange(3, 5)
-        hair_emission(object_count, 1)
+        object_count = 12 #random.randrange(3, 5)
+        hair_emission(object_count, scale=1)
 
         # print(i)
         render(render_name)
