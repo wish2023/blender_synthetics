@@ -1,14 +1,16 @@
-import bpy
-import bpycv
-from bpy import context
+# import bpy
+# import bpycv
+# from bpy import context
 
+import re
 import cv2
 import numpy as np
 import math
+import random
 
 import os
 import glob
-import random
+import yaml
 
 
 
@@ -148,10 +150,7 @@ def generate_random_background():
         colorramp_node.color_ramp.elements[i].position = i * (1 / (num_elements-1))
         colorramp_node.color_ramp.elements[i].color = (random.random(), random.random(), random.random(),1)
 
-def add_sun():
-    min_sun_energy = 1
-    max_sun_energy = 10
-    max_sun_tilt = 70
+def add_sun(min_sun_energy, max_sun_energy, min_sun_tilt):
 
     bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
     bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
@@ -160,10 +159,7 @@ def add_sun():
     bpy.context.scene.objects["Sun"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
     
-def add_camera():
-    min_camera_height = 200
-    max_camera_height = 250
-    max_camera_tilt = 30
+def add_camera(min_camera_height, max_camera_height, min_camera_tilt):
 
     z = random.randrange(min_camera_height, max_camera_height)
     bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
@@ -224,7 +220,7 @@ def get_object_names(class_path, class_name):
 def get_cat_id(obj_name):
     return class_ids[parent_class[obj_name.split('.')[0]]]
 
-def hair_emission(count, scale, occlusion_aware=True):
+def hair_emission(count, scale):
             objects = bpy.data.objects
             plane = objects["Plane"] 
 
@@ -278,34 +274,43 @@ def hair_emission(count, scale, occlusion_aware=True):
                 obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i + 1 # cannot have inst_id = 0
                 obj_copy.hide_render = False
 
-      
-
-        
 
 
-def render(render_name="synthetics.png"):
+def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
     seg_path = os.path.join(render_path, "seg_maps")
     
+    if not os.path.isdir(render_path):
+        os.mkdir(render_path)
     if not os.path.isdir(img_path):
         os.mkdir(img_path)
     if not os.path.isdir(seg_path):
         os.mkdir(seg_path)
     
     result = bpycv.render_data()
-    
-    
+
     cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
     cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(result["inst"]))
 
 
 if __name__ == "__main__":
-    car_folder_path2 = "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
-    car_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
-    render_path = "/home/vishesh/Desktop/synthetics/results"
-    texture_path = "/home/vishesh/Downloads/terrain"
 
-    classes_list = [car_folder_path, car_folder_path2]
+    with open("models.yaml") as file:
+        models_info = yaml.load(file, Loader=yaml.FullLoader)
+    with open("config.yaml") as file:
+        config_info = yaml.load(file, Loader=yaml.FullLoader)
+
+    classes_list = models_info["classes"]
+    scenes_list = os.listdir(models_info["scenes"])
+    render_path = models_info["render_to"]
+    occlusion_aware = config_info["occlusion_aware"]
+    min_camera_height = config_info["min_camera_height"]
+    max_camera_height = config_info["max_camera_height"]
+    max_camera_tilt = config_info["max_camera_tilt"]
+    min_sun_energy = config_info["min_sun_energy"]
+    max_sun_energy = config_info["max_sun_energy"]
+    max_sun_tilt = config_info["max_sun_tilt"]
+
     
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
@@ -318,12 +323,12 @@ if __name__ == "__main__":
     objects_dict = {}
     class_ids = {}
     parent_class = {}
-    for i, class_path in enumerate(classes_list):
+    for i, class_path in enumerate(classes_list): # do the same for obstacles
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
     
-    for i in range(5):
+    for i in range(1):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
@@ -333,13 +338,13 @@ if __name__ == "__main__":
         bpy.ops.object.delete()
         
         plane_size = 120
-        create_plane(plane_size, texture_path=texture_path)
-        add_sun()
-        add_camera()
+        create_plane(plane_size, texture_path=random.choice(scenes_list))
+        add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
+        add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
         object_count = 12 #random.randrange(3, 5)
-        hair_emission(object_count, scale=1)
+        hair_emission(count=object_count, scale=1)
 
         # print(i)
-        render(render_name)
+        # render(render_path, render_name, occlusion_aware)
     

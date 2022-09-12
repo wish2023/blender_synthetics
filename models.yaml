@@ -1,8 +1,9 @@
 classes:
-  - path/to/class1
-  - path/to/class2
-  - path/to/class3
+  - /home/vishesh/Desktop/synthetics/models/small_vehicles2/
+  - "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
 
 obstacles: path/to/all/obstacles
 
-scene: path/to/scene/textures # optional
+scenes: "/home/vishesh/Downloads/terrain" # optional
+
+render_to: "/home/vishesh/Desktop/synthetics/results"
