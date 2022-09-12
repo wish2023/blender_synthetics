@@ -77,18 +77,24 @@ def create_plane(plane_size=500):
 
 
 def add_sun():
-    x, y, z = 0, 0, 50
-    bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(x,y,z), scale=(10, 10, 1))
-    bpy.context.scene.objects["Sun"].data.energy = random.randrange(1,10,2)
-    bpy.context.scene.objects["Sun"].rotation_euler[0] = random.uniform(0, math.radians(70))
-    bpy.context.scene.objects["Sun"].rotation_euler[1] = random.uniform(0, math.radians(70))
+    min_sun_energy = 1
+    max_sun_energy = 10
+    max_sun_tilt = 70
+
+    bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
+    bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
+    bpy.context.scene.objects["Sun"].rotation_euler[0] = random.uniform(0, math.radians(max_sun_tilt))
+    bpy.context.scene.objects["Sun"].rotation_euler[1] = random.uniform(0, math.radians(max_sun_tilt))
     bpy.context.scene.objects["Sun"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
     
 def add_camera():
-    zmin, zmax = 250, 350
-    z = random.randrange(zmin, zmax)
-    bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0, 0, z), rotation=(0, 0, 0), scale=(1, 1, 1))
+    min_camera_height = 200
+    max_camera_height = 250
+    max_camera_tilt = 30
+
+    z = random.randrange(min_camera_height, max_camera_height)
+    bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
     bpy.context.scene.camera = context.object
 
     bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
@@ -99,17 +105,17 @@ def add_camera():
     bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
     bpy.ops.object.select_all(action='DESELECT')
 
-    bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(30))
+    bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
     bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
 
     
 
-def get_object_names(folder_path):
+def get_object_names(class_path, class_name):
     object_names = []
-    filenames = os.listdir(folder_path)
+    filenames = os.listdir(class_path)
     
     for filename in filenames:
-        filepath = os.path.join(folder_path, filename)
+        filepath = os.path.join(class_path, filename)
         obj_name = os.path.splitext(filepath)[0].split("/")[-1]
         ext = os.path.splitext(filepath)[1]
 
@@ -128,8 +134,10 @@ def get_object_names(folder_path):
             continue
         
         object_names.append(obj_name)
+        parent_class[obj_name] = class_name
         bpy.ops.object.select_all(action='DESELECT') # May be redundant
         
+
         object = bpy.data.objects[obj_name]
         object.hide_render = True
         object.rotation_euler.y += math.radians(90)
@@ -137,16 +145,14 @@ def get_object_names(folder_path):
         for coll in object.users_collection:
             coll.objects.unlink(object)
         context.scene.collection.children.get("Models").objects.link(object)
-        
-        
-        
+
     return object_names
 
 
 def get_cat_id(obj_name):
-    pass
+    return class_ids[parent_class[obj_name]]
 
-def hair_emission(namelist, count, scale, cat_id=None, is_target=False):
+def hair_emission(count, scale, occlusion_aware=True):
             objects = bpy.data.objects
             plane = objects["Plane"] 
 
@@ -235,9 +241,11 @@ def render(render_name="synthetics.png"):
 
 
 if __name__ == "__main__":
-    plant_folder_path = "/home/vishesh/Desktop/synthetics/models/plant_imports/"
-    tank_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
+    car2_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
+    car_folder_path = "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
     render_path = "/home/vishesh/Desktop/synthetics/results"
+
+    classes_list = [car_folder_path, car_folder_path2]
     
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
@@ -247,15 +255,21 @@ if __name__ == "__main__":
     collection2 = bpy.data.collections.new("Instances")
     bpy.context.scene.collection.children.link(collection2)
     
-    small_vehicles_namelist = get_object_names(tank_folder_path)
-    #plant_objects_namelist = get_object_names(plant_folder_path)
+    objects_dict = {}
+    class_ids = {}
+    parent_class = {}
+    for i, class_path in enumerate(classes_list):
+        class_name = os.path.basename(class_path)
+        objects_dict[class_name] = get_object_names(class_path, class_name)
+        class_ids[class_name] = i
     
     for i in range(2):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
-        for obj_name in small_vehicles_namelist:
-            bpy.data.objects[obj_name].select_set(False)
+        for id, class_name in class_ids.items():
+            for obj_name in objects_dict[class_name]:
+                bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
         
         plane_size = 120
@@ -263,8 +277,8 @@ if __name__ == "__main__":
         add_sun()
         add_camera()
 
-        tank_count = 20 #random.randrange(3, 5) 
-        hair_emission(small_vehicles_namelist, tank_count, 1, cat_id=2)
+        object_count = 3 #random.randrange(3, 5)
+        hair_emission(object_count, 1)
 
         # print(i)
         render(render_name)
