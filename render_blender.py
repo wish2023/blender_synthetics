@@ -48,35 +48,35 @@ def generate_texture(texture_path):
     nodes = material_basic.node_tree.nodes
 
 
-    principled_node = material_basic.node_tree.nodes.get("Principled BSDF")
-    node_out = material_basic.node_tree.nodes.get("Material Output")
+    principled_node = nodes.get("Principled BSDF")
+    node_out = nodes.get("Material Output")
 
-    node_tex = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_tex = nodes.new('ShaderNodeTexImage')
     node_tex.image = bpy.data.images.load(img_tex)
     node_tex.location = (-700, 800)
 
-    node_rough = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_rough = nodes.new('ShaderNodeTexImage')
     node_rough.image = bpy.data.images.load(img_rough)
     node_rough.location = (-700, 500)
 
-    node_norm = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_norm = nodes.new('ShaderNodeTexImage')
     node_norm.image = bpy.data.images.load(img_norm)
     node_norm.location = (-700, 200)
 
-    node_dis = material_basic.node_tree.nodes.new('ShaderNodeTexImage')
+    node_dis = nodes.new('ShaderNodeTexImage')
     node_dis.image = bpy.data.images.load(img_dis)
     node_dis.location = (-700, -100)
 
-    norm_map = material_basic.node_tree.nodes.new('ShaderNodeNormalMap')
+    norm_map = nodes.new('ShaderNodeNormalMap')
     norm_map.location = (-250, 0)
 
-    node_disp = material_basic.node_tree.nodes.new('ShaderNodeDisplacement')
+    node_disp = nodes.new('ShaderNodeDisplacement')
     node_disp.location = (0, -450)
 
-    node_tex_coor = material_basic.node_tree.nodes.new('ShaderNodeTexCoord')
+    node_tex_coor = nodes.new('ShaderNodeTexCoord')
     node_tex_coor.location = (-1400, 500)
 
-    node_map = material_basic.node_tree.nodes.new('ShaderNodeMapping')
+    node_map = nodes.new('ShaderNodeMapping')
     node_map.location = (-1200, 500)
 
     link = material_basic.node_tree.links.new
@@ -107,12 +107,12 @@ def generate_random_background():
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
-
     bpy.context.object.active_material = material_basic
+    nodes = material_basic.node_tree.nodes
 
-    principled_node = material_basic.node_tree.nodes.get("Principled BSDF")
-    colorramp_node = material_basic.node_tree.nodes.new("ShaderNodeValToRGB")
-    voronoi_node = material_basic.node_tree.nodes.new("ShaderNodeTexVoronoi")
+    principled_node = nodes.get("Principled BSDF")
+    colorramp_node = nodes.new("ShaderNodeValToRGB")
+    voronoi_node = nodes.new("ShaderNodeTexVoronoi")
 
     voronoi_node.location = (-500, 0)
     colorramp_node.location = (-280,0)
