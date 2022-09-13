@@ -201,10 +201,11 @@ def get_object_names(class_path, class_name=None):
             continue
         
         object_names.append(obj_name)
-        parent_class[obj_name] = class_name
+        if class_name:
+            parent_class[obj_name] = class_name
+
         bpy.ops.object.select_all(action='DESELECT') # May be redundant
         
-
         object = bpy.data.objects[obj_name]
         object.hide_render = True
         object.rotation_euler.y += math.radians(90)
@@ -216,8 +217,14 @@ def get_object_names(class_path, class_name=None):
     return object_names
 
 
-def get_cat_id(obj_name):
-    return class_ids[parent_class[obj_name.split('.')[0]]]
+def get_cat_id(obj):
+    return class_ids[parent_class[obj.name.split('.')[0]]]
+
+def is_target(obj):
+    return obj.name.split('.')[0] in objects_dict
+
+def is_obstacle(obj):
+    return obj.name.split('.')[0] in obstacles_list
 
 def hair_emission(count, scale):
             objects = bpy.data.objects
@@ -264,17 +271,27 @@ def hair_emission(count, scale):
             
             objs = bpy.context.selected_objects
             coll_target = bpy.context.scene.collection.children.get("Instances")
+            coll_obstacles = bpy.context.scene.collection.children.get("Obstacles")
             for i, obj in enumerate(objs):
                 for coll in obj.users_collection:
                     coll.objects.unlink(obj)
-                coll_target.objects.link(obj)
+                
                 obj_copy = obj
                 obj_copy.data = obj.data.copy()
-                obj_copy["inst_id"] = get_cat_id(obj.name) * 1000 + i + 1 # cannot have inst_id = 0
                 obj_copy.hide_render = False
 
+                if is_target(obj_copy):
+                    coll_target.objects.link(obj_copy)
+                    obj_copy["inst_id"] = get_cat_id(obj_copy) * 1000 + i + 1 # cannot have inst_id = 0
+                elif is_obstacle(obj_copy):
+                    coll_obstacles.objects.link(obj_copy)
+                else:
+                    raise Exception(obj_copy.name, "is neither an obstacle nor a target")
+
+
 def hide_obstacles():
-    pass
+    for obj in bpy.data.collections['Obstacles'].all_objects:
+        obj.hide_render = True
 
 def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
@@ -308,6 +325,7 @@ if __name__ == "__main__":
 
     classes_list = models_info["classes"]
     scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])]
+    obstacles_path = models_info["obstacles_path"]
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
     min_camera_height = config_info["min_camera_height"]
@@ -316,6 +334,7 @@ if __name__ == "__main__":
     min_sun_energy = config_info["min_sun_energy"]
     max_sun_energy = config_info["max_sun_energy"]
     max_sun_tilt = config_info["max_sun_tilt"]
+    num_img = config_info["num_img"]
 
     
     bpy.ops.object.select_all(action='SELECT')
