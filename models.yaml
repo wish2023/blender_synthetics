@@ -1,8 +1,8 @@
 classes:
-  - /home/vishesh/Desktop/synthetics/models/small_vehicles2/
+  - "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
   - "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
 
-obstacles: path/to/all/obstacles
+obstacles_path: "/home/vishesh/Desktop/synthetics/models/obstacles/"
 
 scenes: "/home/vishesh/Downloads/all_textures" # optional
 
