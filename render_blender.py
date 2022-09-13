@@ -177,7 +177,7 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
 
     
 
-def get_object_names(class_path, class_name):
+def get_object_names(class_path, class_name=None):
     object_names = []
     filenames = os.listdir(class_path)
     
@@ -325,16 +325,24 @@ if __name__ == "__main__":
     bpy.context.scene.collection.children.link(collection)
     collection2 = bpy.data.collections.new("Instances")
     bpy.context.scene.collection.children.link(collection2)
+    collection3 = bpy.data.collections.new("Obstacles")
+    bpy.context.scene.collection.children.link(collection3)
     
-    objects_dict = {}
-    class_ids = {}
-    parent_class = {}
+    objects_dict = {} # objects_dict[class_name] = objects_names_list
+    class_ids = {} # class_ids[class_name] = i
+    parent_class = {} # parent_class[obj_name] = class_name
+
+    obstacles_list = get_object_names(obstacles_path)
+
     for i, class_path in enumerate(classes_list): # do the same for obstacles
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
+
     
-    for i in range(5):
+
+    
+    for i in range(num_img):
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
