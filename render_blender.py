@@ -174,6 +174,8 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
 
     bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
     bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
+    
+    print(bpy.context.scene.objects["Empty"].rotation_euler[0], "radians")
 
     
 
@@ -221,7 +223,7 @@ def get_cat_id(obj):
     return class_ids[parent_class[obj.name.split('.')[0]]]
 
 def is_target(obj):
-    return obj.name.split('.')[0] in objects_dict
+    return obj.name.split('.')[0] in parent_class
 
 def is_obstacle(obj):
     return obj.name.split('.')[0] in obstacles_list
@@ -365,6 +367,8 @@ if __name__ == "__main__":
         render_name = "synthetics" + str(i) + ".png"
         
         bpy.ops.object.select_all(action='SELECT')
+        for obstacle_name in obstacles_list:
+            bpy.data.objects[obstacle_name].select_set(False)
         for class_name in class_ids:
             for obj_name in objects_dict[class_name]:
                 bpy.data.objects[obj_name].select_set(False)
@@ -375,7 +379,7 @@ if __name__ == "__main__":
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
-        object_count = 12 #random.randrange(3, 5)
+        object_count = 30 #random.randrange(3, 5)
         hair_emission(count=object_count, scale=1)
 
         # print(i)
