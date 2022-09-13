@@ -7,3 +7,5 @@ max_camera_tilt: 30
 min_sun_energy: 1
 max_sun_energy: 10
 max_sun_tilt: 70
+
+num_img: 2
