@@ -1,5 +1,4 @@
 classes:
-  - "/home/vishesh/Desktop/synthetics/models/small_vehicles2/"
   - "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
 
 obstacles_path: "/home/vishesh/Desktop/synthetics/models/obstacles/"
