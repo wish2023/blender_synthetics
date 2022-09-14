@@ -363,8 +363,8 @@ if __name__ == "__main__":
     
 
     
-    for i in range(num_img):
-        render_name = "synthetics" + str(i) + ".png"
+    for i in range(2):
+        render_name = f"synthetics{i}.png"
         
         bpy.ops.object.select_all(action='SELECT')
         for obstacle_name in obstacles_list:
@@ -379,9 +379,9 @@ if __name__ == "__main__":
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
-        object_count = 30 #random.randrange(3, 5)
+        object_count = 10 #random.randrange(3, 5)
         hair_emission(count=object_count, scale=1)
 
         # print(i)
-        # render(render_path, render_name, occlusion_aware)
+        render(render_path, render_name, occlusion_aware)
     
