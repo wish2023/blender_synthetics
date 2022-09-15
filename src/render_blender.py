@@ -293,11 +293,90 @@ def hair_emission(count, scale):
                     raise Exception(obj_copy.name, "is neither an obstacle nor a target")
 
 
+def render_setup():
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.view_layers["ViewLayer"].use_pass_object_index = True
+    bpy.context.scene.use_nodes = True
+
+    tree = bpy.context.scene.node_tree
+
+    for node in tree.nodes:
+        tree.nodes.remove(node)
+
+    render_node = tree.nodes.new(type='CompositorNodeRLayers')
+    render_node.layer = 'ViewLayer'
+    render_node.location = 0,0
+
+    comp_node = tree.nodes.new('CompositorNodeComposite')   
+    comp_node.location = 600,0
+
+    file_node = tree.nodes.new('CompositorNodeOutputFile')
+    file_node.location = 600, -200
+
+    math_node = tree.nodes.new('CompositorNodeMath')
+    math_node.inputs[1].default_value = 65535
+    math_node.operation = 'DIVIDE'
+
+    math_node.location = 300, -200
+
+    links = tree.links
+    link = links.new(render_node.outputs["IndexOB"], math_node.inputs[0])
+    link = links.new(render_node.outputs[0], comp_node.inputs[0])
+
+
+def render(render_path, render_name="synthetics.png", occlusion_aware=True):
+    img_path = os.path.join(render_path, "img")
+    occ_aware_seg_path = os.path.join(render_path, "seg_maps")
+    occ_ignore_seg_path = os.path.join(render_path, "other_seg_maps")
+    
+    if not os.path.isdir(render_path):
+        os.mkdir(render_path)
+    if not os.path.isdir(img_path):
+        os.mkdir(img_path)
+    if not os.path.isdir(occ_aware_seg_path):
+        os.mkdir(occ_aware_seg_path)
+    if not os.path.isdir(occ_ignore_seg_path):
+        os.mkdir(occ_ignore_seg_path)
+
+
+    tree = bpy.context.scene.node_tree
+    links = tree.links
+    
+    print(list(tree.nodes))
+
+    render_node = tree.nodes["Render Layers"] 
+    file_node = tree.nodes["File Output"]
+    math_node = tree.nodes["Math"]
+
+
+    link = links.new(render_node.outputs[0], file_node.inputs[0])
+    file_node.format.color_depth = '8'
+    file_node.format.color_mode = 'RGBA'
+    file_node.format.file_format = 'PNG'
+    file_node.base_path = img_path
+    file_node.file_slots[0].path = render_name
+    bpy.ops.render.render(write_still=True)
+
+    link = links.new(math_node.outputs[0], file_node.inputs[0])
+    file_node.format.color_depth = '16'
+    file_node.format.color_mode = 'BW'
+    file_node.format.file_format = 'PNG'
+    file_node.base_path = occ_aware_seg_path
+    file_node.file_slots[0].path = render_name
+    bpy.ops.render.render(write_still=True)
+
+    hide_obstacles()
+
+    file_node.base_path = occ_ignore_seg_path
+    file_node.file_slots[0].path = render_name
+    bpy.ops.render.render(write_still=True)
+
+
 def hide_obstacles():
     for obj in bpy.data.collections['Obstacles'].all_objects:
         obj.hide_render = True
 
-def render(render_path, render_name="synthetics.png", occlusion_aware=True):
+def render2(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
     seg_path = os.path.join(render_path, "seg_maps")
     
@@ -322,9 +401,9 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
 if __name__ == "__main__":
 
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/models.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/models.yaml") as file:
         models_info = yaml.load(file, Loader=yaml.FullLoader)
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
@@ -355,6 +434,7 @@ if __name__ == "__main__":
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
 
+    render_setup()
     obstacles_list = get_object_names(obstacles_path)
 
     for i, class_path in enumerate(classes_list): # do the same for obstacles
@@ -365,8 +445,8 @@ if __name__ == "__main__":
     
 
     
-    for i in range(2):
-        render_name = f"synthetics{i}.png"
+    for i in range(1):
+        render_name = f"synthetics{i}"
         
         bpy.ops.object.select_all(action='SELECT')
         for obstacle_name in obstacles_list:
