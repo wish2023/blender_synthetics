@@ -48,6 +48,9 @@ for img_name in os.listdir(seg_maps_path):
 
     for inst in instances:
         cat_id = inst // 1000
+
+        # is_inst_valid() # is it being occluded too much
+        # remove_small_components() # remove components with too few pixels, only if occlusion aware
         
         points = cv2.findNonZero((seg_map == inst).astype(int))
         x, y, w, h = cv2.boundingRect(points)
