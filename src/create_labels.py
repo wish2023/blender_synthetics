@@ -13,7 +13,7 @@ with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml"
 view_annotations = True # config_info["view_annotations"]
 occlusion_aware = True # config_info["occlusion_aware"]
 visibility_thresh = 0.3 # config_info["visibility_thresh"]
-component_visibility_thresh = 0.1 # config_info["component_visibility_thresh"]
+component_visibility_thresh = 0.29 # config_info["component_visibility_thresh"]
 
 occ_aware_seg_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
 occ_ignore_seg_path = "/home/vishesh/Desktop/synthetics/results/other_seg_maps"
@@ -47,8 +47,8 @@ def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
 def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
     inst_size = np.count_nonzero(occ_ignore_seg_map == inst)
     seg_map_copy = np.copy(occ_aware_seg_map)
-    seg_map_copy[seg_map != inst] = 0
-    seg_map_copy[seg_map == inst] = 1
+    seg_map_copy[occ_aware_seg_map != inst] = 0
+    seg_map_copy[occ_aware_seg_map == inst] = 1
     seg_map_copy = seg_map_copy.astype('uint8')
 
     num_components, components = cv2.connectedComponents(seg_map_copy)
@@ -96,6 +96,8 @@ for img_name in os.listdir(occ_aware_seg_path):
             seg_map = occ_ignore_seg_map
         
         points = cv2.findNonZero((seg_map == inst).astype(int))
+        if points is None:
+            continue
         x, y, w, h = cv2.boundingRect(points)
 
         if occlusion_aware == False and (x == 0 or y == 0 or x+w == img.shape[1] or y+h == img.shape[0]): # bounding box on edge, object partially not in frame
