@@ -1,15 +1,22 @@
 import os
+import yaml
 
 import numpy as np
 import pandas as pd
 
 import cv2
-from PIL import Image
 
-view_annotations = True
-occlusion_aware = False
 
-seg_maps_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
+with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
+    config_info = yaml.load(file, Loader=yaml.FullLoader)
+
+view_annotations = True # config_info["view_annotations"]
+occlusion_aware = True # config_info["occlusion_aware"]
+visibility_thresh = 0.3 # config_info["visibility_thresh"]
+component_visibility_thresh = 0.1 # config_info["component_visibility_thresh"]
+
+occ_aware_seg_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
+occ_ignore_seg_path = "/home/vishesh/Desktop/synthetics/results/other_seg_maps"
 yolo_annotated_path = "/home/vishesh/Desktop/synthetics/results/yolo_annotated"
 obb_annotated_path = "/home/vishesh/Desktop/synthetics/results/obb_annotated"
 img_path = "/home/vishesh/Desktop/synthetics/results/img"
@@ -29,7 +36,6 @@ if not os.path.isdir(obb_labels_path):
     os.mkdir(obb_labels_path)
 
 
-for img_name in os.listdir(seg_maps_path):
 def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
     visibility = np.count_nonzero(occ_aware_seg_map == inst) / np.count_nonzero(occ_ignore_seg_map == inst)
     if visibility >= thresh:
@@ -59,11 +65,18 @@ for img_name in os.listdir(occ_aware_seg_path):
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
         "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
 
-    seg_map = Image.open(os.path.join(seg_maps_path, img_name))
-    seg_map = np.array(np.asarray(seg_map))
-    img_h, img_w = seg_map.shape[:2]
+    # occ_aware_seg_map = Image.open(os.path.join(occ_aware_seg_path, img_name))
+    # occ_aware_seg_map = np.array(np.asarray(occ_aware_seg_map))
+    # occ_ignore_seg_map = Image.open(os.path.join(occ_ignore_seg_path, img_name))
+    # occ_ignore_seg_map = np.array(np.asarray(occ_ignore_seg_map))
 
-    instances = np.unique(seg_map)
+    occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_name), -1)
+    occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_name), -1)
+
+
+    img_h, img_w = occ_aware_seg_map.shape[:2]
+
+    instances = np.unique(occ_aware_seg_map)
     instances = instances[instances != 0]
 
     if view_annotations:
@@ -73,8 +86,14 @@ for img_name in os.listdir(occ_aware_seg_path):
     for inst in instances:
         cat_id = inst // 1000
 
-        # is_inst_valid() # is it being occluded too much
-        # remove_small_components() # remove components with too few pixels, only if occlusion aware
+        if not is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, visibility_thresh): # is it being occluded too much
+            continue
+
+        if occlusion_aware:
+            remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, component_visibility_thresh) # remove components with too few pixels
+            seg_map = occ_aware_seg_map
+        else:
+            seg_map = occ_ignore_seg_map
         
         points = cv2.findNonZero((seg_map == inst).astype(int))
         x, y, w, h = cv2.boundingRect(points)
@@ -115,4 +134,5 @@ for img_name in os.listdir(occ_aware_seg_path):
     if view_annotations:
         cv2.imwrite(os.path.join(yolo_annotated_path, img_name), img_bb)
         cv2.imwrite(os.path.join(obb_annotated_path, img_name), img_obb)
+
 
