@@ -10,10 +10,10 @@ import cv2
 with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
     config_info = yaml.load(file, Loader=yaml.FullLoader)
 
-view_annotations = True # config_info["view_annotations"]
-occlusion_aware = True # config_info["occlusion_aware"]
-visibility_thresh = 0.95 # config_info["visibility_thresh"]
-component_visibility_thresh = 0.1 # config_info["component_visibility_thresh"]
+view_annotations = config_info["view_annotations"]
+occlusion_aware = config_info["occlusion_aware"]
+visibility_thresh = config_info["visibility_thresh"]
+component_visibility_thresh = config_info["component_visibility_thresh"]
 
 occ_aware_seg_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
 occ_ignore_seg_path = "/home/vishesh/Desktop/synthetics/results/other_seg_maps"
