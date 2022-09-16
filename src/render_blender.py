@@ -295,6 +295,7 @@ def hair_emission(count, scale):
 
 def render_setup():
     bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'GPU'
     bpy.context.scene.view_layers["ViewLayer"].use_pass_object_index = True
     bpy.context.scene.use_nodes = True
 
@@ -407,7 +408,7 @@ if __name__ == "__main__":
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
-    scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])]
+#    scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])]
     obstacles_path = models_info["obstacles_path"]
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
@@ -445,7 +446,7 @@ if __name__ == "__main__":
     
 
     
-    for i in range(1):
+    for i in range(5):
         render_name = f"synthetics{i}"
         
         bpy.ops.object.select_all(action='SELECT')
@@ -456,12 +457,13 @@ if __name__ == "__main__":
                 bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
         
-        plane_size = 120
-        create_plane(plane_size, texture_path=random.choice(scenes_list))
+        plane_size = 200
+#        scene = random.choice(scenes_list)
+        create_plane(plane_size, texture_path=None)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
-        object_count = 10 #random.randrange(3, 5)
+        object_count = 150 #random.randrange(3, 5)
         hair_emission(count=object_count, scale=1)
 
         # print(i)
