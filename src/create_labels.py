@@ -30,6 +30,12 @@ if not os.path.isdir(obb_labels_path):
 
 
 for img_name in os.listdir(seg_maps_path):
+def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
+    visibility = np.count_nonzero(occ_aware_seg_map == inst) / np.count_nonzero(occ_ignore_seg_map == inst)
+    if visibility >= thresh:
+        return True
+    else:
+        return False
 
     ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
