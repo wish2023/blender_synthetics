@@ -293,7 +293,18 @@ def hair_emission(count, scale):
                     raise Exception(obj_copy.name, "is neither an obstacle nor a target")
 
 
-def render_setup():
+def blender_setup():
+
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete()
+    
+    collection = bpy.data.collections.new("Models")
+    bpy.context.scene.collection.children.link(collection)
+    collection2 = bpy.data.collections.new("Instances")
+    bpy.context.scene.collection.children.link(collection2)
+    collection3 = bpy.data.collections.new("Obstacles")
+    bpy.context.scene.collection.children.link(collection3)
+    
     bpy.context.scene.render.engine = 'CYCLES'
     bpy.context.scene.cycles.device = 'GPU'
     bpy.context.scene.view_layers["ViewLayer"].use_pass_object_index = True
@@ -408,7 +419,7 @@ if __name__ == "__main__":
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
-    scenes = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
+    scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
     obstacles_path = models_info["obstacles_path"]
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
@@ -419,36 +430,31 @@ if __name__ == "__main__":
     max_sun_energy = config_info["max_sun_energy"]
     max_sun_tilt = config_info["max_sun_tilt"]
     num_img = config_info["num_img"]
+    plane_size = config_info["plane_size"]
+    min_obj_count = config_info["min_obj_count"]
+    max_obj_count = config_info["max_obj_count"]
 
-    
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete()
-    
-    collection = bpy.data.collections.new("Models")
-    bpy.context.scene.collection.children.link(collection)
-    collection2 = bpy.data.collections.new("Instances")
-    bpy.context.scene.collection.children.link(collection2)
-    collection3 = bpy.data.collections.new("Obstacles")
-    bpy.context.scene.collection.children.link(collection3)
     
     objects_dict = {} # objects_dict[class_name] = objects_names_list
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
 
-    render_setup()
-    obstacles_list = get_object_names(obstacles_path)
+    blender_setup()
 
-    for i, class_path in enumerate(classes_list): # do the same for obstacles
+    # refactor
+    obstacles_list = get_object_names(obstacles_path)
+    for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
+    #refactor
+
 
     
-
-    
-    for i in range(5):
+    for i in range(num_img):
         render_name = f"synthetics{i}"
         
+        # refactor
         bpy.ops.object.select_all(action='SELECT')
         for obstacle_name in obstacles_list:
             bpy.data.objects[obstacle_name].select_set(False)
@@ -456,14 +462,14 @@ if __name__ == "__main__":
             for obj_name in objects_dict[class_name]:
                 bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
+        # refactor
         
-        plane_size = 200
-        scene = random.choice(scenes) if scenes else None
+        scene = random.choice(scenes_list) if scenes_list else None
         create_plane(plane_size, texture_path=scene)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
-        object_count = 150 #random.randrange(3, 5)
+        object_count = random.randrange(min_obj_count, max_obj_count)
         hair_emission(count=object_count, scale=1)
 
         # print(i)
