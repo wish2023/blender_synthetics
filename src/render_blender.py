@@ -408,7 +408,7 @@ if __name__ == "__main__":
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
-#    scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])]
+    scenes = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
     obstacles_path = models_info["obstacles_path"]
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
@@ -458,8 +458,8 @@ if __name__ == "__main__":
         bpy.ops.object.delete()
         
         plane_size = 200
-#        scene = random.choice(scenes_list)
-        create_plane(plane_size, texture_path=None)
+        scene = random.choice(scenes) if scenes else None
+        create_plane(plane_size, texture_path=scene)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
 
