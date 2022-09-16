@@ -3,6 +3,10 @@ view_annotations: True
 visibility_thresh: 0.3
 component_visibility_thresh: 0.1
 
+plane_size: 200
+min_obj_count: 50
+max_obj_count: 100
+
 min_camera_height: 200
 max_camera_height: 250
 max_camera_tilt: 30
