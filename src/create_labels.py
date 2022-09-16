@@ -37,6 +37,24 @@ def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
     else:
         return False
 
+
+def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
+    inst_size = np.count_nonzero(occ_ignore_seg_map == inst)
+    seg_map_copy = np.copy(occ_aware_seg_map)
+    seg_map_copy[seg_map != inst] = 0
+    seg_map_copy[seg_map == inst] = 1
+    seg_map_copy = seg_map_copy.astype('uint8')
+
+    num_components, components = cv2.connectedComponents(seg_map_copy)
+
+    for i in range(1, num_components):
+        component_size = np.count_nonzero(components == i)
+        if component_size / inst_size < thresh:
+            occ_aware_seg_map[components == i] = 0 # delete component
+
+
+for img_name in os.listdir(occ_aware_seg_path):
+
     ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
         "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
