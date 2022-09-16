@@ -12,8 +12,8 @@ with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml"
 
 view_annotations = True # config_info["view_annotations"]
 occlusion_aware = True # config_info["occlusion_aware"]
-visibility_thresh = 0.3 # config_info["visibility_thresh"]
-component_visibility_thresh = 0.29 # config_info["component_visibility_thresh"]
+visibility_thresh = 0.95 # config_info["visibility_thresh"]
+component_visibility_thresh = 0.1 # config_info["component_visibility_thresh"]
 
 occ_aware_seg_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
 occ_ignore_seg_path = "/home/vishesh/Desktop/synthetics/results/other_seg_maps"
