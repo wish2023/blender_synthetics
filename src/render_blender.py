@@ -420,7 +420,7 @@ if __name__ == "__main__":
 
     classes_list = models_info["classes"]
     scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
-    obstacles_path = models_info["obstacles_path"]
+    obstacles_path = models_info["obstacles_path"] if "obstacles_path" in models_info else None
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
     min_camera_height = config_info["min_camera_height"]
@@ -442,7 +442,7 @@ if __name__ == "__main__":
     blender_setup()
 
     # refactor
-    obstacles_list = get_object_names(obstacles_path)
+    obstacles_list = get_object_names(obstacles_path) if obstacles_path else None
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
