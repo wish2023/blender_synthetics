@@ -1,9 +1,6 @@
 import bpy
-import bpycv
 from bpy import context
 
-import cv2
-import numpy as np
 import math
 import random
 
@@ -387,28 +384,6 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 def hide_obstacles():
     for obj in bpy.data.collections['Obstacles'].all_objects:
         obj.hide_render = True
-
-def render2(render_path, render_name="synthetics.png", occlusion_aware=True):
-    img_path = os.path.join(render_path, "img")
-    seg_path = os.path.join(render_path, "seg_maps")
-    
-    if not os.path.isdir(render_path):
-        os.mkdir(render_path)
-    if not os.path.isdir(img_path):
-        os.mkdir(img_path)
-    if not os.path.isdir(seg_path):
-        os.mkdir(seg_path)
-    
-    result = bpycv.render_data()
-
-    if occlusion_aware:
-        cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(result["inst"]))
-    else:
-        hide_obstacles()
-        hidden_obstacles_result = bpycv.render_data()
-        cv2.imwrite(os.path.join(seg_path, render_name), np.uint16(hidden_obstacles_result["inst"]))
-
-    cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
 
 
 if __name__ == "__main__":
