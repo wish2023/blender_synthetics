@@ -1,0 +1,4 @@
+PyYAML
+opencv-python
+numpy
+pandas
