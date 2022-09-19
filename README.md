@@ -1,10 +1,10 @@
 # Blender Synthetcis
 
-This repo contains all codes and bitstreams to upload a custom mulit-layer perceptron model onto an FPGA.
+Create your own synthetic dataset for object detection.
 
 ## Description
 
-Decsription here
+This repo creates random scenes on blender, imports custom 3D models with randomised configurations, and renders numerous images with annotations to train an object detection model.
 
 ## Getting Started
 
