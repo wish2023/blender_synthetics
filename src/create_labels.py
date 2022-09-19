@@ -11,7 +11,7 @@ import cv2
 with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
     config_info = yaml.load(file, Loader=yaml.FullLoader)
 
-with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
+with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/models.yaml") as file:
     models_info = yaml.load(file, Loader=yaml.FullLoader)
 
 view_annotations = config_info["view_annotations"]
