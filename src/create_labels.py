@@ -76,11 +76,6 @@ for img_name in os.listdir(occ_aware_seg_path):
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
         "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
 
-    # occ_aware_seg_map = Image.open(os.path.join(occ_aware_seg_path, img_name))
-    # occ_aware_seg_map = np.array(np.asarray(occ_aware_seg_map))
-    # occ_ignore_seg_map = Image.open(os.path.join(occ_ignore_seg_path, img_name))
-    # occ_ignore_seg_map = np.array(np.asarray(occ_ignore_seg_map))
-
     occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_name), -1)
     occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_name), -1)
 
