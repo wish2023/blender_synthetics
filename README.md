@@ -8,7 +8,6 @@ This repo creates random scenes on blender, imports custom 3D models with random
 
 ## Getting Started
 
-### Installation
 
 - Step 1
 - Step 2
