@@ -3,6 +3,7 @@ import yaml
 
 import numpy as np
 import pandas as pd
+import random
 
 import cv2
 
@@ -10,20 +11,23 @@ import cv2
 with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
     config_info = yaml.load(file, Loader=yaml.FullLoader)
 
+with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
+    models_info = yaml.load(file, Loader=yaml.FullLoader)
+
 view_annotations = config_info["view_annotations"]
 occlusion_aware = config_info["occlusion_aware"]
 visibility_thresh = config_info["visibility_thresh"]
 component_visibility_thresh = config_info["component_visibility_thresh"]
+results_dir = models_info["render_to"]
+num_classes = len(models_info["classes"])
 
-occ_aware_seg_path = "/home/vishesh/Desktop/synthetics/results/seg_maps"
-occ_ignore_seg_path = "/home/vishesh/Desktop/synthetics/results/other_seg_maps"
-yolo_annotated_path = "/home/vishesh/Desktop/synthetics/results/yolo_annotated"
-obb_annotated_path = "/home/vishesh/Desktop/synthetics/results/obb_annotated"
-img_path = "/home/vishesh/Desktop/synthetics/results/img"
-yolo_labels_path = "/home/vishesh/Desktop/synthetics/results/yolo_labels"
-obb_labels_path = "/home/vishesh/Desktop/synthetics/results/obb_labels"
-
-color = {0: (0,0,255), 1: (0,255,0)}
+occ_aware_seg_path = os.path.join(results_dir, "seg_maps")
+occ_ignore_seg_path = os.path.join(results_dir, "other_seg_maps")
+yolo_annotated_path = os.path.join(results_dir, "yolo_annotated")
+obb_annotated_path = os.path.join(results_dir, "obb_annotated")
+img_path = os.path.join(results_dir, "img")
+yolo_labels_path = os.path.join(results_dir, "yolo_labels")
+obb_labels_path = os.path.join(results_dir, "obb_labels")
 
 
 if not os.path.isdir(yolo_annotated_path):
@@ -34,6 +38,13 @@ if not os.path.isdir(yolo_labels_path):
     os.mkdir(yolo_labels_path)
 if not os.path.isdir(obb_labels_path):
     os.mkdir(obb_labels_path)
+
+
+colors = {}
+
+for i in range(num_classes):
+    random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    colors[i] = random_color
 
 
 def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
@@ -107,8 +118,8 @@ for img_name in os.listdir(occ_aware_seg_path):
         obb_points = cv2.boxPoints(obb).astype(int)
 
         if view_annotations:
-            img_bb = cv2.rectangle(img_bb, (x, y), (x+w, y+h), color=color[cat_id], thickness=2)
-            img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=color[cat_id], thickness=2)
+            img_bb = cv2.rectangle(img_bb, (x, y), (x+w, y+h), color=colors[cat_id], thickness=2)
+            img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=colors[cat_id], thickness=2)
 
         ann["cat_id"].append(cat_id) 
         ann["xc"].append((x + w/2) / img_w)
