@@ -5,8 +5,8 @@ visibility_thresh: 0.3
 component_visibility_thresh: 0.1
 
 plane_size: 150
-min_obj_count: 50
-max_obj_count: 100
+min_obj_count: 50 # min number of objects in scene
+max_obj_count: 100 # max number of objects in scene
 
 min_camera_height: 200
 max_camera_height: 250
@@ -16,4 +16,4 @@ min_sun_energy: 1
 max_sun_energy: 10
 max_sun_tilt: 70
 
-num_img: 2
+num_img: 2 # number of images to render
