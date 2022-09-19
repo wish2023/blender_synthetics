@@ -8,21 +8,24 @@ This repo creates random scenes on blender, imports custom 3D models with random
 
 ## Getting Started
 
+### Install blender 3.2
 
-- Step 1
-- Step 2
+- Follow installation instructions [here](https://www.blender.org/download/releases/3-2/) 
+- Ensure your GPU is supported on blender. Refer [here](https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html)
 
-### Quick Start
-
-```
-python3 render_blender.py
-```
-
-## Custom Synthetics
+### Clone repo
 
 ```
-python3 render_blender.py --models models.yaml --config config.yaml
+git clone https://github.com/wish2023/blender-synthetics.git
 ```
+
+### Install packages
+
+```
+sh install_requirements.sh
+```
+
+## Configurations
 
 ### Scene
 
