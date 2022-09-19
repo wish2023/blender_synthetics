@@ -22,12 +22,31 @@ git clone https://github.com/wish2023/blender-synthetics.git
 ### Install packages
 
 ```
-sh install_requirements.sh
+sh install_requirements.sh your/blender/dir/location
 ```
+## Generate synthetics
+
+- Update `data/models.yaml` and `data/config.yaml` as required. Refer to [models](#models) and  [configurations](#configurations) for details.
+- Generate images. `blender --background --python src/render_blender.py`
+- Generate annotations `python3 src/create_labels.py`
+
+## Models
+
+### Classes
+
+Your targets of interest. Bounding boxes will be drawn around these objects.
+
+### Obstacles (Optional)
+
+Other objects which will be present in the scene. These won't be annotated.
+
+### Scenes (Optional)
+
+Textures that your scene may have. Explore possible textures from [texture haven](https://polyhaven.com/textures) and store all texture subfolders in a main folder.
 
 ## Configurations
 
-### Scene
+### Occlusion aware
 
 Plane texture
 
