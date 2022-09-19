@@ -50,23 +50,29 @@ Textures that your scene may have. Explore possible textures from [texture haven
 
 ## Configurations
 
-### Occlusion aware
+### Occlusion awareness
 
-Plane texture
+When not occlusion aware, bounding boxes will surround regions of the object that aren't visible by the camera.
 
-### Models
+![occ diagram](diagrams/occlusion.jpg)
 
-Description
+#### Visibility threshold
 
-### Camera Height and Angle
+The fraction of an object that must be visible by the camera for it to be considered visible to a human annotator.
 
-Description
+![camera diagram](diagrams/visthresh.png)
 
-### Lighting and Shadow
 
-Descriptions
+#### Component visibility threshold
 
-### Data Format
+The fraction of an object components that must be visible by the camera for it to be considered visible to a human annotator.
 
-YOLO, COCO
+![camera diagram](diagrams/comvisthresh.png)
 
+### Camera configurations
+
+![camera diagram](diagrams/camera.png)
+
+### Sun
+
+The sun's energy is the light intensity on the scene. The tilt is responsible for casting shadows and works similar to the camera's tilt.
