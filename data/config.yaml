@@ -1,9 +1,10 @@
+view_annotations: True # view BBs overlayed on image
+
 occlusion_aware: True
-view_annotations: True
 visibility_thresh: 0.3
 component_visibility_thresh: 0.1
 
-plane_size: 200
+plane_size: 150
 min_obj_count: 50
 max_obj_count: 100
 
