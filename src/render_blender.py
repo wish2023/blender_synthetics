@@ -447,6 +447,9 @@ if __name__ == "__main__":
         object_count = random.randrange(min_obj_count, max_obj_count)
         hair_emission(count=object_count, scale=1)
 
-        # print(i)
         render(render_path, render_name, occlusion_aware)
+
+        print("-------------")
+        print(f"Image {i+1} of {num_img} complete")
+        print("-------------")
     
