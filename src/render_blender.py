@@ -27,10 +27,6 @@ def create_plane(plane_size=500, texture_path=None):
         generate_random_background()
         
 def generate_texture(texture_path):
-    # img_tex = "/home/vishesh/Downloads/terrain/aerial_rocks_04_diff_4k.jpg"
-    # img_rough = "/home/vishesh/Downloads/terrain/aerial_rocks_04_rough_4k.jpg"
-    # img_norm = "/home/vishesh/Downloads/terrain/aerial_rocks_04_nor_gl_4k.exr"
-    # img_dis = "/home/vishesh/Downloads/terrain/aerial_rocks_04_disp_4k.png"
 
     img_tex = glob.glob(os.path.join(texture_path, "*_diff_*"))[0]
     img_rough = glob.glob(os.path.join(texture_path, "*_rough_*"))[0]
@@ -172,7 +168,6 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
     bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
     bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
-    print(bpy.context.scene.objects["Empty"].rotation_euler[0], "radians")
 
     
 
@@ -243,7 +238,6 @@ def hair_emission(count, scale):
 
             # EMISSION
             seed = random.randrange(10000)
-            print("Seed", seed)
             psys.settings.count = particle_count # param
             psys.settings.hair_length = particle_scale # param
             psys.seed = seed
@@ -350,8 +344,6 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
     tree = bpy.context.scene.node_tree
     links = tree.links
-    
-    print(list(tree.nodes))
 
     render_node = tree.nodes["Render Layers"] 
     file_node = tree.nodes["File Output"]
