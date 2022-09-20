@@ -69,8 +69,17 @@ def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh)
         if component_size / inst_size < thresh:
             occ_aware_seg_map[components == i] = 0 # delete component
 
+def ccw(x1, y1, x2, y2, x3, y3):
+    return (y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
 
-for img_name in os.listdir(occ_aware_seg_path):
+
+# Return true if line segments intersect
+def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
+    return ccw(x1, y1 ,x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4) and \
+        ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4)
+
+
+for img_name in os.listdir(img_path):
 
     ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
@@ -78,6 +87,7 @@ for img_name in os.listdir(occ_aware_seg_path):
 
     occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_name), -1)
     occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_name), -1)
+    img = cv2.imread(os.path.join(img_path, img_name))
 
 
     img_h, img_w = occ_aware_seg_map.shape[:2]
@@ -86,7 +96,6 @@ for img_name in os.listdir(occ_aware_seg_path):
     instances = instances[instances != 0]
 
     if view_annotations:
-        img = cv2.imread(os.path.join(img_path, img_name))
         img_bb, img_obb = img.copy(), img.copy()
 
     for inst in instances:
