@@ -6,6 +6,7 @@ import pandas as pd
 import random
 
 import cv2
+import fiftyone as fo
 
 
 with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
@@ -25,6 +26,7 @@ occ_aware_seg_path = os.path.join(results_dir, "seg_maps")
 occ_ignore_seg_path = os.path.join(results_dir, "other_seg_maps")
 yolo_annotated_path = os.path.join(results_dir, "yolo_annotated")
 obb_annotated_path = os.path.join(results_dir, "obb_annotated")
+coco_annotated_path = os.path.join(results_dir, "coco_annotated")
 img_path = os.path.join(results_dir, "img")
 yolo_labels_path = os.path.join(results_dir, "yolo_labels")
 obb_labels_path = os.path.join(results_dir, "obb_labels")
@@ -41,6 +43,7 @@ if not os.path.isdir(obb_labels_path):
 
 
 colors = {}
+dataset = fo.Dataset("my-detection-dataset")
 
 for i in range(num_classes):
     random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -90,6 +93,7 @@ for img_name in os.listdir(img_path):
     occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_name), -1)
     occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_name), -1)
     img = cv2.imread(os.path.join(img_path, img_name))
+    sample = fo.Sample(filepath=os.path.join(img_path, img_name))
 
 
     img_h, img_w = occ_aware_seg_map.shape[:2]
@@ -98,8 +102,9 @@ for img_name in os.listdir(img_path):
     instances = instances[instances != 0]
 
     if view_annotations:
-        img_bb, img_obb = img.copy(), img.copy()
+        img_bb, img_obb, img_seg = img.copy(), img.copy(), img.copy()
 
+    detections = []
     for inst in instances:
         cat_id = inst // 1000
 
@@ -157,6 +162,9 @@ for img_name in os.listdir(img_path):
                         continue
 
 
+        detection = fo.Detection(label=cat_id, bounding_box=[x_bb/img_w, y_bb/img_h, w/img_w, h/img_h])
+        detections.append(detection) # add mask
+
         if view_annotations and len(ann["xc"]) not in overlapping: # if current instance isn't overlapping
             img_bb = cv2.rectangle(img_bb, (x_bb, y_bb), (x_bb+w, y_bb+h), color=colors[cat_id], thickness=2)
             img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=colors[cat_id], thickness=2)
@@ -177,6 +185,8 @@ for img_name in os.listdir(img_path):
         ann["obb4y"].append(obb_points[3][1])
 
 
+    sample["ground_truth"] = fo.Detections(detections=detections)
+    dataset.add_samples(sample)
 
     df = pd.DataFrame.from_dict(ann)
     df = df.drop(list(overlapping))
@@ -186,9 +196,31 @@ for img_name in os.listdir(img_path):
     obb_col = ["cat_id", "obb1x", "obb1y", "obb2x", "obb2y", "obb3x", "obb3y", "obb4x", "obb4y"]
     np.savetxt(os.path.join(obb_labels_path, img_name[:-4] + ".txt"), df[obb_col], delimiter=' ', fmt=['%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d'])
     
-    cv2.imwrite(os.path.join(img_path, img_name), img)
+    cv2.imwrite(os.path.join(img_path, img_name), img) # overwrite overlapping regions in image
+
     if view_annotations:
         cv2.imwrite(os.path.join(yolo_annotated_path, img_name), img_bb)
         cv2.imwrite(os.path.join(obb_annotated_path, img_name), img_obb)
+        # cv2.imwrite(os.path.join(coco_annotated_path, img_name), img_seg)
 
+
+
+json_path = "testing.json"
+
+dataset.export(
+    export_dir = results_dir,
+    dataset_type=fo.types.COCODetectionDataset,
+    label_field="ground_truth",
+)
+
+dataset_type = fo.types.COCODetectionDataset 
+dataset = fo.Dataset.from_dir( # to 'get' labels.json tt has bbox data and original images (for visualisation on fiftyone website)
+            dataset_type=fo.types.COCODetectionDataset,
+            data_path=img_path,
+            labels_path=json_path,
+        )
+dataset.persistent = False
+
+
+dataset.draw_labels(coco_annotated_path, label_fields="ground_truth")
 
