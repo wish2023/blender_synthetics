@@ -165,14 +165,15 @@ for img_name in os.listdir(img_path):
                         continue
 
 
-        detection = fo.Detection(label=str(cat_id), # needs to be name
-                                bounding_box=[x_bb/img_w, y_bb/img_h, w/img_w, h/img_h],
-                                mask=seg_map == inst)
-        detections.append(detection) # add mask
 
         if view_annotations and len(ann["xc"]) not in overlapping: # if current instance isn't overlapping
             img_bb = cv2.rectangle(img_bb, (x_bb, y_bb), (x_bb+w, y_bb+h), color=colors[cat_id], thickness=2)
             img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=colors[cat_id], thickness=2)
+
+            detection = fo.Detection(label=str(cat_id),
+                                bounding_box=[x_bb/img_w, y_bb/img_h, w/img_w, h/img_h],
+                                mask=seg_map == inst)
+            detections.append(detection)
 
         ann["cat_id"].append(cat_id) 
         ann["xc"].append((x_bb + w/2) / img_w)
@@ -206,7 +207,6 @@ for img_name in os.listdir(img_path):
     if view_annotations:
         cv2.imwrite(os.path.join(yolo_annotated_path, img_name), img_bb)
         cv2.imwrite(os.path.join(obb_annotated_path, img_name), img_obb)
-        # cv2.imwrite(os.path.join(coco_annotated_path, img_name), img_seg)
 
 
 
