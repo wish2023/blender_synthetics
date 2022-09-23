@@ -29,6 +29,7 @@ obb_annotated_path = os.path.join(results_dir, "obb_annotated")
 coco_annotated_path = os.path.join(results_dir, "coco_annotated")
 img_path = os.path.join(results_dir, "img")
 yolo_labels_path = os.path.join(results_dir, "yolo_labels")
+yolo_labels_path2 = os.path.join(results_dir, "yolo_labels2")
 obb_labels_path = os.path.join(results_dir, "obb_labels")
 
 
@@ -36,6 +37,8 @@ if not os.path.isdir(yolo_annotated_path):
     os.mkdir(yolo_annotated_path)
 if not os.path.isdir(obb_annotated_path):
     os.mkdir(obb_annotated_path)
+if not os.path.isdir(coco_annotated_path):
+    os.mkdir(coco_annotated_path)
 if not os.path.isdir(yolo_labels_path):
     os.mkdir(yolo_labels_path)
 if not os.path.isdir(obb_labels_path):
@@ -128,7 +131,7 @@ for img_name in os.listdir(img_path):
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
 
-        for i in range(obb_points.shape[0]): # check every segment
+        for i in range(obb_points.shape[0]): # check every line segment
             x1, y1, x2, y2 = obb_points[i][0], obb_points[i][1], \
                                 obb_points[(i+1) % obb_points.shape[0]][0], obb_points[(i+1) % obb_points.shape[0]][1]
             
@@ -162,7 +165,9 @@ for img_name in os.listdir(img_path):
                         continue
 
 
-        detection = fo.Detection(label=cat_id, bounding_box=[x_bb/img_w, y_bb/img_h, w/img_w, h/img_h])
+        detection = fo.Detection(label=str(cat_id), # needs to be name
+                                bounding_box=[x_bb/img_w, y_bb/img_h, w/img_w, h/img_h],
+                                mask=seg_map == inst)
         detections.append(detection) # add mask
 
         if view_annotations and len(ann["xc"]) not in overlapping: # if current instance isn't overlapping
@@ -186,10 +191,10 @@ for img_name in os.listdir(img_path):
 
 
     sample["ground_truth"] = fo.Detections(detections=detections)
-    dataset.add_samples(sample)
+    dataset.add_sample(sample)
 
     df = pd.DataFrame.from_dict(ann)
-    df = df.drop(list(overlapping))
+    df = df.drop(list(overlapping)) # get rid of overlapping labels
     yolo_col = ["cat_id", "xc", "yc", "w", "h"]
     np.savetxt(os.path.join(yolo_labels_path, img_name[:-4] + ".txt"), df[yolo_col], delimiter=' ', fmt=['%d', '%.4f', '%.4f', '%.4f', '%.4f'])
 
@@ -208,19 +213,17 @@ for img_name in os.listdir(img_path):
 json_path = "testing.json"
 
 dataset.export(
-    export_dir = results_dir,
+    labels_path = os.path.join(coco_annotated_path, json_path),
     dataset_type=fo.types.COCODetectionDataset,
     label_field="ground_truth",
 )
 
-dataset_type = fo.types.COCODetectionDataset 
-dataset = fo.Dataset.from_dir( # to 'get' labels.json tt has bbox data and original images (for visualisation on fiftyone website)
-            dataset_type=fo.types.COCODetectionDataset,
-            data_path=img_path,
-            labels_path=json_path,
-        )
-dataset.persistent = False
+dataset.export(
+    labels_path = yolo_labels_path2,
+    dataset_type=fo.types.YOLOv5Dataset,
+    label_field="ground_truth",
+)
 
-
-dataset.draw_labels(coco_annotated_path, label_fields="ground_truth")
+if view_annotations:
+    dataset.draw_labels(coco_annotated_path, label_fields="ground_truth")
 
