@@ -44,8 +44,91 @@ if not os.path.isdir(obb_labels_path):
     os.mkdir(obb_labels_path)
 
 
-colors = {}
+coco_ann = {"images": [
+            {
+                "id":1,
+                "file_name":"synthetics40001.png",
+                "height":1080,
+                "width":1920,
+            },
+            {
+                "id":2,
+                "file_name":"synthetics30001.png",
+                "height":1080,
+                "width":1920,
+            }
+            ], 
+            "categories": [
+            {
+                "id":0,
+                "name":"0",
+            },
+            {
+                "id":1,
+                "name":"1",
+            }
+            ], 
+            "annotations": [
+            {
+                "id":1,
+                "image_id":1,
+                "category_id":0,
+                "bbox":[
+                    81.0,
+                    29.0,
+                    48.0,
+                    38.0
+                ],
+                "segmentation":[
+                    
+                ],
+                "area":1824.0,
+                "iscrowd":0
+            },
+            {
+                "id":2,
+                "image_id":1,
+                "category_id":0,
+                "bbox":[
+                    938.0,
+                    0.0,
+                    46.0,
+                    54.0
+                ],
+                "segmentation":[
+                    [
+                        960.0,
+                        2.5,
+                        960.0,
+                        0,
+                        960.0,
+                        2.5
+                    ]
+                ],
+                "area":2484.0,
+                "iscrowd":0
+            },
+            {
+                "id":3,
+                "image_id":1,
+                "category_id":0,
+                "bbox":[
+                    252.0,
+                    495.0,
+                    48.0,
+                    38.99999999999999
+                ],
+                "segmentation":[
+                    
+                ],
+                "area":1871.9999999999995,
+                "iscrowd":0
+            }
+        ]
+    }
 
+
+colors = {}
 for i in range(num_classes):
     random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     colors[i] = random_color
