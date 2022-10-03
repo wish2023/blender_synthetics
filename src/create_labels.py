@@ -1,6 +1,8 @@
 import os
 import yaml
 
+import pycocotools.mask as mask
+
 import numpy as np
 import pandas as pd
 import random
