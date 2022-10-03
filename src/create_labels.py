@@ -21,6 +21,7 @@ occlusion_aware = config_info["occlusion_aware"]
 visibility_thresh = config_info["visibility_thresh"]
 component_visibility_thresh = config_info["component_visibility_thresh"]
 results_dir = models_info["render_to"]
+classes = [os.path.basename(os.path.normpath(class_path)) for class_path in models_info["classes"]]
 num_classes = len(models_info["classes"])
 
 occ_aware_seg_path = os.path.join(results_dir, "seg_maps")
