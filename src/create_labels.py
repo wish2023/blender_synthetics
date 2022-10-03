@@ -168,16 +168,18 @@ def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
 
 for img_name in os.listdir(img_path):
 
+
+for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
+
     overlapping = set() # instances indices which overlap
 
     bb_ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
         "obb3x": [], "obb3y": [], "obb4x": [], "obb4y": []}
 
-    occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_name), -1)
-    occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_name), -1)
-    img = cv2.imread(os.path.join(img_path, img_name))
-
+    occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_filename), -1)
+    occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_filename), -1)
+    img = cv2.imread(os.path.join(img_path, img_filename))
 
     img_h, img_w = occ_aware_seg_map.shape[:2]
 
@@ -268,15 +270,15 @@ for img_name in os.listdir(img_path):
     df = pd.DataFrame.from_dict(bb_ann)
     df = df.drop(list(overlapping)) # get rid of overlapping labels
     yolo_col = ["cat_id", "xc", "yc", "w", "h"]
-    np.savetxt(os.path.join(yolo_labels_path, img_name[:-4] + ".txt"), df[yolo_col], delimiter=' ', fmt=['%d', '%.4f', '%.4f', '%.4f', '%.4f'])
+    np.savetxt(os.path.join(yolo_labels_path, img_filename[:-4] + ".txt"), df[yolo_col], delimiter=' ', fmt=['%d', '%.4f', '%.4f', '%.4f', '%.4f'])
 
     obb_col = ["cat_id", "obb1x", "obb1y", "obb2x", "obb2y", "obb3x", "obb3y", "obb4x", "obb4y"]
-    np.savetxt(os.path.join(obb_labels_path, img_name[:-4] + ".txt"), df[obb_col], delimiter=' ', fmt=['%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d'])
+    np.savetxt(os.path.join(obb_labels_path, img_filename[:-4] + ".txt"), df[obb_col], delimiter=' ', fmt=['%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d'])
     
-    cv2.imwrite(os.path.join(img_path, img_name), img) # overwrite overlapping regions in image
+    cv2.imwrite(os.path.join(img_path, img_filename), img) # overwrite overlapping regions in image
 
     if view_annotations:
-        cv2.imwrite(os.path.join(yolo_annotated_path, img_name), img_bb)
-        cv2.imwrite(os.path.join(obb_annotated_path, img_name), img_obb)
-        cv2.imwrite(os.path.join(coco_annotated_path, img_name), img_seg)
+        cv2.imwrite(os.path.join(yolo_annotated_path, img_filename), img_bb)
+        cv2.imwrite(os.path.join(obb_annotated_path, img_filename), img_obb)
+        cv2.imwrite(os.path.join(coco_annotated_path, img_filename), img_seg)
 
