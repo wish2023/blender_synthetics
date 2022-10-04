@@ -2,4 +2,3 @@ PyYAML
 opencv-python
 numpy
 pandas
-fiftyone
