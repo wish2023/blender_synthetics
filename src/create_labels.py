@@ -248,5 +248,5 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
 
 print(coco_ann)
-with open(os.path.join(results_dir, "sample.json"), "w") as f:
+with open(os.path.join(results_dir, "coco_annotations.json"), "w") as f:
     json.dump(coco_ann, f)
