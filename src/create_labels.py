@@ -1,7 +1,7 @@
+from itertools import groupby
+import json
 import os
 import yaml
-
-import pycocotools.mask as mask
 
 import numpy as np
 import pandas as pd
@@ -28,10 +28,9 @@ occ_aware_seg_path = os.path.join(results_dir, "seg_maps")
 occ_ignore_seg_path = os.path.join(results_dir, "other_seg_maps")
 yolo_annotated_path = os.path.join(results_dir, "yolo_annotated")
 obb_annotated_path = os.path.join(results_dir, "obb_annotated")
-coco_annotated_path = os.path.join(results_dir, "coco_annotated")
+# coco_annotated_path = os.path.join(results_dir, "coco_annotated")
 img_path = os.path.join(results_dir, "img")
 yolo_labels_path = os.path.join(results_dir, "yolo_labels")
-yolo_labels_path2 = os.path.join(results_dir, "yolo_labels2")
 obb_labels_path = os.path.join(results_dir, "obb_labels")
 
 
@@ -39,97 +38,14 @@ if not os.path.isdir(yolo_annotated_path):
     os.mkdir(yolo_annotated_path)
 if not os.path.isdir(obb_annotated_path):
     os.mkdir(obb_annotated_path)
-if not os.path.isdir(coco_annotated_path):
-    os.mkdir(coco_annotated_path)
+# if not os.path.isdir(coco_annotated_path):
+#     os.mkdir(coco_annotated_path)
 if not os.path.isdir(yolo_labels_path):
     os.mkdir(yolo_labels_path)
 if not os.path.isdir(obb_labels_path):
     os.mkdir(obb_labels_path)
 
-
-coco_ann = {"images": [
-            {
-                "id":1,
-                "file_name":"synthetics40001.png",
-                "height":1080,
-                "width":1920,
-            },
-            {
-                "id":2,
-                "file_name":"synthetics30001.png",
-                "height":1080,
-                "width":1920,
-            }
-            ], 
-            "categories": [
-            {
-                "id":0,
-                "name":"0",
-            },
-            {
-                "id":1,
-                "name":"1",
-            }
-            ], 
-            "annotations": [
-            {
-                "id":1,
-                "image_id":1,
-                "category_id":0,
-                "bbox":[
-                    81.0,
-                    29.0,
-                    48.0,
-                    38.0
-                ],
-                "segmentation":[
-                    
-                ],
-                "area":1824.0,
-                "iscrowd":0
-            },
-            {
-                "id":2,
-                "image_id":1,
-                "category_id":0,
-                "bbox":[
-                    938.0,
-                    0.0,
-                    46.0,
-                    54.0
-                ],
-                "segmentation":[
-                    [
-                        960.0,
-                        2.5,
-                        960.0,
-                        0,
-                        960.0,
-                        2.5
-                    ]
-                ],
-                "area":2484.0,
-                "iscrowd":0
-            },
-            {
-                "id":3,
-                "image_id":1,
-                "category_id":0,
-                "bbox":[
-                    252.0,
-                    495.0,
-                    48.0,
-                    38.99999999999999
-                ],
-                "segmentation":[
-                    
-                ],
-                "area":1871.9999999999995,
-                "iscrowd":0
-            }
-        ]
-    }
-
+coco_ann = {"images": [], "categories": [], "annotations": []}
 
 colors = {}
 for i in range(num_classes):
@@ -159,12 +75,22 @@ def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh)
         if component_size / inst_size < thresh:
             occ_aware_seg_map[components == i] = 0 # delete component
 
-def ccw(x1, y1, x2, y2, x3, y3):
-    return (y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
+
+def binary_mask_to_rle(binary_mask):
+    rle = {'counts': [], 'size': list(binary_mask.shape)}
+    counts = rle.get('counts')
+    for i, (value, elements) in enumerate(groupby(binary_mask.ravel(order='F'))):
+        if i == 0 and value == 1:
+            counts.append(0)
+        counts.append(len(list(elements)))
+    return rle
 
 
 # Return true if line segments intersect
 def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
+    def ccw(x1, y1, x2, y2, x3, y3):
+        return (y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
+
     return ccw(x1, y1 ,x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4) and \
         ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4)
 
@@ -208,7 +134,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
     detections = []
     for inst in instances:
-        cat_id = inst // 1000
+        cat_id = int(inst // 1000)
 
         if not is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, visibility_thresh): # is it being occluded too much
             continue
@@ -234,15 +160,15 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
             x1, y1, x2, y2 = obb_points[i][0], obb_points[i][1], \
                                 obb_points[(i+1) % obb_points.shape[0]][0], obb_points[(i+1) % obb_points.shape[0]][1]
             
-            for j in range(len(bb_ann["xc"])): # number of boxes in img so far
-                obb_points2 = np.array([[bb_ann["obb1x"][j], bb_ann["obb1y"][j]], 
-                                        [bb_ann["obb2x"][j], bb_ann["obb2y"][j]], 
-                                        [bb_ann["obb3x"][j], bb_ann["obb3y"][j]], 
-                                        [bb_ann["obb4x"][j], bb_ann["obb4y"][j]]])
+            for bb_ind in range(len(bb_ann["xc"])): # number of boxes in img so far
+                obb_points2 = np.array([[bb_ann["obb1x"][bb_ind], bb_ann["obb1y"][bb_ind]], 
+                                        [bb_ann["obb2x"][bb_ind], bb_ann["obb2y"][bb_ind]], 
+                                        [bb_ann["obb3x"][bb_ind], bb_ann["obb3y"][bb_ind]], 
+                                        [bb_ann["obb4x"][bb_ind], bb_ann["obb4y"][bb_ind]]])
 
                 
-                w2, h2 = round(bb_ann["w"][j]*img_w), round(bb_ann["h"][j]*img_h)
-                x_bb2, y_bb2 = round((bb_ann["xc"][j] * img_w) - w2/2), round((bb_ann["yc"][j] * img_h) - h2/2)
+                w2, h2 = round(bb_ann["w"][bb_ind]*img_w), round(bb_ann["h"][bb_ind]*img_h)
+                x_bb2, y_bb2 = round((bb_ann["xc"][bb_ind] * img_w) - w2/2), round((bb_ann["yc"][bb_ind] * img_h) - h2/2)
 
 
                 for k in range(obb_points2.shape[0]):
@@ -251,7 +177,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
                     
                     if intersect(x1, y1, x2, y2, x3, y3, x4, y4):
-                        overlapping.add(j)
+                        overlapping.add(bb_ind)
                         overlapping.add(len(bb_ann["xc"]))
 
                         img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=(0,0,255), thickness=3)
@@ -286,18 +212,16 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         ann_info = {
                     "id": random.randrange(1,10000), # find robust way for this
                     "image_id":img_id,
-                    "category_id":cat_id,
+                    "category_id": cat_id,
                     "bbox":[
                         x_bb,
                         y_bb,
                         w,
                         h
                     ],
-                    "segmentation":[
-                        mask.encode(np.asfortranarray((seg_map == inst).astype('uint8')))
-                    ],
-                    "area":w*h,
-                    "iscrowd":0
+                    "segmentation": binary_mask_to_rle((seg_map == inst).astype('uint8')),
+                    "area": w*h,
+                    "iscrowd": 0
                     }
 
         img_ann_info.append(ann_info)
@@ -320,5 +244,9 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
     if view_annotations:
         cv2.imwrite(os.path.join(yolo_annotated_path, img_filename), img_bb)
         cv2.imwrite(os.path.join(obb_annotated_path, img_filename), img_obb)
-        cv2.imwrite(os.path.join(coco_annotated_path, img_filename), img_seg)
+        # cv2.imwrite(os.path.join(coco_annotated_path, img_filename), img_seg)
 
+
+print(coco_ann)
+with open(os.path.join(results_dir, "sample.json"), "w") as f:
+    json.dump(coco_ann, f)
