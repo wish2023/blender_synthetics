@@ -169,7 +169,12 @@ def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
         ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4)
 
 
-for img_name in os.listdir(img_path):
+for i in range(num_classes):
+    cat_info = {
+                "id":i,
+                "name":classes[i],
+                }
+    coco_ann["categories"].append(cat_info)
 
 
 for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
@@ -185,6 +190,15 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
     img = cv2.imread(os.path.join(img_path, img_filename))
 
     img_h, img_w = occ_aware_seg_map.shape[:2]
+
+    img_info = {
+                "id":img_id,
+                "file_name":img_filename,
+                "height":img_h,
+                "width":img_w,
+                }
+    coco_ann["images"].append(img_info)
+    img_ann_info = []
 
     instances = np.unique(occ_aware_seg_map)
     instances = instances[instances != 0]
@@ -269,14 +283,37 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         bb_ann["obb4x"].append(obb_points[3][0])
         bb_ann["obb4y"].append(obb_points[3][1])
 
+        ann_info = {
+                    "id": random.randrange(1,10000), # find robust way for this
+                    "image_id":img_id,
+                    "category_id":cat_id,
+                    "bbox":[
+                        x_bb,
+                        y_bb,
+                        w,
+                        h
+                    ],
+                    "segmentation":[
+                        mask.encode(np.asfortranarray((seg_map == inst).astype('uint8')))
+                    ],
+                    "area":w*h,
+                    "iscrowd":0
+                    }
+
+        img_ann_info.append(ann_info)
+
+
 
     df = pd.DataFrame.from_dict(bb_ann)
     df = df.drop(list(overlapping)) # get rid of overlapping labels
+    img_ann_info = [i for j, i in enumerate(img_ann_info) if j not in overlapping] # Test this
     yolo_col = ["cat_id", "xc", "yc", "w", "h"]
     np.savetxt(os.path.join(yolo_labels_path, img_filename[:-4] + ".txt"), df[yolo_col], delimiter=' ', fmt=['%d', '%.4f', '%.4f', '%.4f', '%.4f'])
 
     obb_col = ["cat_id", "obb1x", "obb1y", "obb2x", "obb2y", "obb3x", "obb3y", "obb4x", "obb4y"]
     np.savetxt(os.path.join(obb_labels_path, img_filename[:-4] + ".txt"), df[obb_col], delimiter=' ', fmt=['%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d'])
+
+    coco_ann["annotations"].extend(img_ann_info)
     
     cv2.imwrite(os.path.join(img_path, img_filename), img) # overwrite overlapping regions in image
 
