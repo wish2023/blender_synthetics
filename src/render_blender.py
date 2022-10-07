@@ -369,7 +369,7 @@ if __name__ == "__main__":
 
     
     for i in range(num_img):
-        render_name = f"synthetics{i}"
+        render_name = f"synthetics{i}.png"
 
 
         # refactor
