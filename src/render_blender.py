@@ -408,27 +408,21 @@ if __name__ == "__main__":
 
     blender_setup()
 
-    # refactor
-    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
-    for i, class_path in enumerate(classes_list):
-        class_name = os.path.basename(os.path.normpath(class_path))
-        objects_dict[class_name] = get_object_names(class_path, class_name)
-        class_ids[class_name] = i
-    #refactor
-
 
     
     for i in range(num_img):
         render_name = f"synthetics{i}"
-        
+
+
         # refactor
         bpy.ops.object.select_all(action='SELECT')
-        for obstacle_name in obstacles_list:
-            bpy.data.objects[obstacle_name].select_set(False)
-        for class_name in class_ids:
-            for obj_name in objects_dict[class_name]:
-                bpy.data.objects[obj_name].select_set(False)
         bpy.ops.object.delete()
+
+        obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
+        for i, class_path in enumerate(classes_list):
+            class_name = os.path.basename(os.path.normpath(class_path))
+            objects_dict[class_name] = get_object_names(class_path, class_name)
+            class_ids[class_name] = i
         # refactor
         
         scene = random.choice(scenes_list) if scenes_list else None
