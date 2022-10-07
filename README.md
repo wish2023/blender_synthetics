@@ -23,9 +23,9 @@ git clone https://github.com/wish2023/blender-synthetics.git
 
 ### Install packages
 
-<pre>
-sh install_requirements.sh your/blender/dir/location/<b>version_number</b>
-</pre>
+```
+sh install_requirements.sh
+```
 
 ## Generate synthetics
 
