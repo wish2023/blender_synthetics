@@ -230,7 +230,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
     df = pd.DataFrame.from_dict(bb_ann)
     df = df.drop(list(overlapping)) # get rid of overlapping labels
-    img_ann_info = [i for j, i in enumerate(img_ann_info) if j not in overlapping] # Test this
+    img_ann_info = [i for j, i in enumerate(img_ann_info) if j not in overlapping]
     yolo_col = ["cat_id", "xc", "yc", "w", "h"]
     np.savetxt(os.path.join(yolo_labels_path, img_filename[:-4] + ".txt"), df[yolo_col], delimiter=' ', fmt=['%d', '%.4f', '%.4f', '%.4f', '%.4f'])
 
@@ -247,6 +247,5 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         # cv2.imwrite(os.path.join(coco_annotated_path, img_filename), img_seg)
 
 
-print(coco_ann)
 with open(os.path.join(results_dir, "coco_annotations.json"), "w") as f:
     json.dump(coco_ann, f)
