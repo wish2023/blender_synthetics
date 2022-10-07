@@ -23,9 +23,10 @@ git clone https://github.com/wish2023/blender-synthetics.git
 
 ### Install packages
 
-```
-sh install_requirements.sh your/blender/dir/location/**version_number**
-```
+<pre>
+sh install_requirements.sh your/blender/dir/location/<b>version_number</b>
+</pre>
+
 ## Generate synthetics
 
 - Update `data/models.yaml` and `data/config.yaml` as required. Refer to [models](#models) and  [configurations](#configurations) for details.
