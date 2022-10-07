@@ -277,7 +277,6 @@ def hair_emission(count, scale):
                     coll_target.objects.link(obj_copy)
                     inst_id = get_cat_id(obj_copy) * 1000 + i + 1 # cannot have inst_id = 0
                     obj_copy["inst_id"] = inst_id # for bpycv
-                    obj_copy.pass_index = inst_id # for inbuilt segmaps
                 elif is_obstacle(obj_copy):
                     coll_obstacles.objects.link(obj_copy)
                 else:
