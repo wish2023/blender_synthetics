@@ -409,7 +409,7 @@ if __name__ == "__main__":
     blender_setup()
 
     # refactor
-    obstacles_list = get_object_names(obstacles_path) if obstacles_path else None
+    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
