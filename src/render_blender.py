@@ -90,12 +90,6 @@ def generate_texture(texture_path):
 
 
 def generate_random_background():
-    # tex = bpy.data.textures.new("Voronoi", 'VORONOI')
-    # tex.distance_metric = 'DISTANCE_SQUARED'
-    # modifier = plane.modifiers.new(name="Displace", type='DISPLACE')
-    # modifier.texture = bpy.data.textures['Voronoi']
-    # modifier.strength = random.randint(1,4)
-    # bpy.ops.object.modifier_apply(modifier='Displace')
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
@@ -117,14 +111,6 @@ def generate_random_background():
     voronoi_node.distance = random.choice(distances)
     voronoi_node.feature = random.choice(features)
     voronoi_node.inputs[2].default_value = random.uniform(2, 10) # scale
-    #voronoi_node.inputs[-1].default_value = random.random() # randomness
-
-    ##########################################
-#    print(voronoi_node.voronoi_dimensions)
-#    print(voronoi_node.distance)
-#    print(voronoi_node.feature)
-#    print(voronoi_node.inputs[2].default_value)
-    ##########################################
 
 
     link = material_basic.node_tree.links.new
