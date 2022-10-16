@@ -10,7 +10,9 @@ import yaml
 
 
 
-def create_plane(plane_size=500, texture_path=None):
+def create_plane(plane_size=500, scenes_list=None):
+    scene = random.choice(scenes_list) if scenes_list else None
+
     subdivide_count = 100
     bpy.ops.mesh.primitive_plane_add(size=plane_size, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     bpy.ops.object.editmode_toggle()
@@ -21,8 +23,8 @@ def create_plane(plane_size=500, texture_path=None):
 
     bpy.ops.object.editmode_toggle()
 
-    if texture_path:
-        generate_texture(texture_path)
+    if scene:
+        generate_texture(scene)
     else:
         generate_random_background()
         
@@ -197,6 +199,24 @@ def get_object_names(class_path, class_name=None):
     return object_names
 
 
+def import_objects():
+    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
+    for i, class_path in enumerate(classes_list):
+        class_name = os.path.basename(os.path.normpath(class_path))
+        objects_dict[class_name] = get_object_names(class_path, class_name)
+        class_ids[class_name] = i
+
+
+def delete_duplicates():
+    bpy.ops.object.select_all(action='SELECT')
+    for obstacle_name in obstacles_list:
+        bpy.data.objects[obstacle_name].select_set(False)
+    for class_name in class_ids:
+        for obj_name in objects_dict[class_name]:
+            bpy.data.objects[obj_name].select_set(False)
+    bpy.ops.object.delete()
+
+
 def get_cat_id(obj):
     return class_ids[parent_class[obj.name.split('.')[0]]]
 
@@ -206,14 +226,14 @@ def is_target(obj):
 def is_obstacle(obj):
     return obj.name.split('.')[0] in obstacles_list
 
-def hair_emission(count, scale):
+def hair_emission(min_obj_count, max_obj_count, scale):
             objects = bpy.data.objects
             plane = objects["Plane"] 
 
             bpy.context.view_layer.objects.active = plane
             bpy.ops.object.particle_system_add()
             
-            particle_count = count
+            particle_count = random.randrange(min_obj_count, max_obj_count)
             particle_scale = scale
 
             ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
@@ -352,16 +372,13 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     file_node.file_slots[0].path = render_name
     bpy.ops.render.render(write_still=True)
 
-    hide_obstacles()
+    for obj in bpy.data.collections['Obstacles'].all_objects:
+        obj.hide_render = True
 
     file_node.base_path = occ_ignore_seg_path
     file_node.file_slots[0].path = render_name
     bpy.ops.render.render(write_still=True)
 
-
-def hide_obstacles():
-    for obj in bpy.data.collections['Obstacles'].all_objects:
-        obj.hide_render = True
 
 
 if __name__ == "__main__":
@@ -391,43 +408,22 @@ if __name__ == "__main__":
     objects_dict = {} # objects_dict[class_name] = objects_names_list
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
+    obstacles_list = []
+
 
     blender_setup()
+    import_objects()
 
-    # refactor
-    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
-    for i, class_path in enumerate(classes_list):
-        class_name = os.path.basename(os.path.normpath(class_path))
-        objects_dict[class_name] = get_object_names(class_path, class_name)
-        class_ids[class_name] = i
-    #refactor
-
-
-    
     for i in range(num_img):
         render_name = f"synthetics{i}"
         
-        # refactor
-        bpy.ops.object.select_all(action='SELECT')
-        for obstacle_name in obstacles_list:
-            bpy.data.objects[obstacle_name].select_set(False)
-        for class_name in class_ids:
-            for obj_name in objects_dict[class_name]:
-                bpy.data.objects[obj_name].select_set(False)
-        bpy.ops.object.delete()
-        # refactor
-        
-        scene = random.choice(scenes_list) if scenes_list else None
-        create_plane(plane_size, texture_path=scene)
+        create_plane(plane_size, texture_path=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
-
-        object_count = random.randrange(min_obj_count, max_obj_count)
-        hair_emission(count=object_count, scale=1)
-
+        hair_emission(min_obj_count, max_obj_count, scale=1)
         render(render_path, render_name, occlusion_aware)
 
-        print("-------------")
+        print("---------------------------------------")
         print(f"Image {i+1} of {num_img} complete")
-        print("-------------")
+        print("---------------------------------------")
     
