@@ -105,7 +105,7 @@ for i in range(num_classes):
 
 for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
-    overlapping = set() # instances indices which overlap
+    overlapping = set() # instances which overlap
 
     bb_ann = {"cat_id": [], "xc": [], "yc": [], "w": [], "h": [], 
         "obb1x": [], "obb1y": [], "obb2x": [], "obb2y": [], 
@@ -156,7 +156,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
 
-        for i in range(obb_points.shape[0]): # check every line segment
+        for i in range(obb_points.shape[0]): # for line segment
             x1, y1, x2, y2 = obb_points[i][0], obb_points[i][1], \
                                 obb_points[(i+1) % obb_points.shape[0]][0], obb_points[(i+1) % obb_points.shape[0]][1]
             
@@ -210,7 +210,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         bb_ann["obb4y"].append(obb_points[3][1])
 
         ann_info = {
-                    "id": random.randrange(1,10000), # find robust way for this
+                    "id": random.randrange(1,10000), # TODO: find robust way for this
                     "image_id":img_id,
                     "category_id": cat_id,
                     "bbox":[
@@ -244,7 +244,6 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
     if view_annotations:
         cv2.imwrite(os.path.join(yolo_annotated_path, img_filename), img_bb)
         cv2.imwrite(os.path.join(obb_annotated_path, img_filename), img_obb)
-        # cv2.imwrite(os.path.join(coco_annotated_path, img_filename), img_seg)
 
 
 with open(os.path.join(results_dir, "coco_annotations.json"), "w") as f:
