@@ -14,7 +14,9 @@ import yaml
 
 
 
-def create_plane(plane_size=500, texture_path=None):
+def create_plane(plane_size=500, scenes_list=None):
+    scene = random.choice(scenes_list) if scenes_list else None
+
     subdivide_count = 100
     bpy.ops.mesh.primitive_plane_add(size=plane_size, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     bpy.ops.object.editmode_toggle()
@@ -25,8 +27,8 @@ def create_plane(plane_size=500, texture_path=None):
 
     bpy.ops.object.editmode_toggle()
 
-    if texture_path:
-        generate_texture(texture_path)
+    if scene:
+        generate_texture(scene)
     else:
         generate_random_background()
         
@@ -94,12 +96,6 @@ def generate_texture(texture_path):
 
 
 def generate_random_background():
-    # tex = bpy.data.textures.new("Voronoi", 'VORONOI')
-    # tex.distance_metric = 'DISTANCE_SQUARED'
-    # modifier = plane.modifiers.new(name="Displace", type='DISPLACE')
-    # modifier.texture = bpy.data.textures['Voronoi']
-    # modifier.strength = random.randint(1,4)
-    # bpy.ops.object.modifier_apply(modifier='Displace')
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
@@ -121,14 +117,6 @@ def generate_random_background():
     voronoi_node.distance = random.choice(distances)
     voronoi_node.feature = random.choice(features)
     voronoi_node.inputs[2].default_value = random.uniform(2, 10) # scale
-    #voronoi_node.inputs[-1].default_value = random.random() # randomness
-
-    ##########################################
-#    print(voronoi_node.voronoi_dimensions)
-#    print(voronoi_node.distance)
-#    print(voronoi_node.feature)
-#    print(voronoi_node.inputs[2].default_value)
-    ##########################################
 
 
     link = material_basic.node_tree.links.new
@@ -215,6 +203,24 @@ def get_object_names(class_path, class_name=None):
     return object_names
 
 
+def import_objects():
+    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
+    for i, class_path in enumerate(classes_list):
+        class_name = os.path.basename(os.path.normpath(class_path))
+        objects_dict[class_name] = get_object_names(class_path, class_name)
+        class_ids[class_name] = i
+
+
+def delete_duplicates():
+    bpy.ops.object.select_all(action='SELECT')
+    for obstacle_name in obstacles_list:
+        bpy.data.objects[obstacle_name].select_set(False)
+    for class_name in class_ids:
+        for obj_name in objects_dict[class_name]:
+            bpy.data.objects[obj_name].select_set(False)
+    bpy.ops.object.delete()
+
+
 def get_cat_id(obj):
     return class_ids[parent_class[obj.name.split('.')[0]]]
 
@@ -224,14 +230,14 @@ def is_target(obj):
 def is_obstacle(obj):
     return obj.name.split('.')[0] in obstacles_list
 
-def hair_emission(count, scale):
+def hair_emission(min_obj_count, max_obj_count, scale):
             objects = bpy.data.objects
             plane = objects["Plane"] 
 
             bpy.context.view_layer.objects.active = plane
             bpy.ops.object.particle_system_add()
             
-            particle_count = count
+            particle_count = random.randrange(min_obj_count, max_obj_count)
             particle_scale = scale
 
             ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
@@ -303,8 +309,6 @@ def blender_setup():
     bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
 
 
-
-
 def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
     occ_aware_seg_path = os.path.join(render_path, "seg_maps")
@@ -321,8 +325,10 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
 
     result = bpycv.render_data()
-    hide_obstacles()
+    for obj in bpy.data.collections['Obstacles'].all_objects:
+        obj.hide_render = True
     hidden_obstacles_result = bpycv.render_data(render_image=False)
+
 
     cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
     cv2.imwrite(os.path.join(occ_aware_seg_path, render_name), np.uint16(result["inst"]))
@@ -330,10 +336,6 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
     
 
-
-def hide_obstacles():
-    for obj in bpy.data.collections['Obstacles'].all_objects:
-        obj.hide_render = True
 
 
 if __name__ == "__main__":
@@ -359,41 +361,23 @@ if __name__ == "__main__":
     min_obj_count = config_info["min_obj_count"]
     max_obj_count = config_info["max_obj_count"]
 
-    
     objects_dict = {} # objects_dict[class_name] = objects_names_list
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
+    obstacles_list = []
 
     blender_setup()
+    import_objects()
 
-
-    
     for i in range(num_img):
-        render_name = f"synthetics{i}.png"
-
-
-        # refactor
-        bpy.ops.object.select_all(action='SELECT')
-        bpy.ops.object.delete()
-
-        obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
-        for i, class_path in enumerate(classes_list):
-            class_name = os.path.basename(os.path.normpath(class_path))
-            objects_dict[class_name] = get_object_names(class_path, class_name)
-            class_ids[class_name] = i
-        # refactor
-        
-        scene = random.choice(scenes_list) if scenes_list else None
-        create_plane(plane_size, texture_path=scene)
+        render_name = f"synthetics{i}"
+        create_plane(plane_size, texture_path=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
-
-        object_count = random.randrange(min_obj_count, max_obj_count)
-        hair_emission(count=object_count, scale=1)
-
+        hair_emission(min_obj_count, max_obj_count, scale=1)
         render(render_path, render_name, occlusion_aware)
 
-        print("-------------")
+        print("---------------------------------------")
         print(f"Image {i+1} of {num_img} complete")
-        print("-------------")
+        print("---------------------------------------")
     
