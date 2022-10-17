@@ -163,11 +163,8 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
 
     
 
-def get_object_names(class_path, class_name=None):
-    object_names = []
-    filenames = os.listdir(class_path)
-    
-    for filename in filenames:
+def import_from_path(class_path, class_name=None):
+    for filename in os.listdir(class_path):
         filepath = os.path.join(class_path, filename)
         obj_name = os.path.splitext(filepath)[0].split("/")[-1]
         ext = os.path.splitext(filepath)[1]
@@ -186,7 +183,6 @@ def get_object_names(class_path, class_name=None):
         else:
             continue
         
-        object_names.append(obj_name)
         if class_name:
             parent_class[obj_name] = class_name
 
@@ -200,26 +196,32 @@ def get_object_names(class_path, class_name=None):
             coll.objects.unlink(object)
         context.scene.collection.children.get("Models").objects.link(object)
 
-    return object_names
 
 
 def import_objects():
-    if obstacles_path: obstacles_list.extend(get_object_names(obstacles_path))
+    import_from_path(obstacles_path)
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
-        objects_dict[class_name] = get_object_names(class_path, class_name)
+        objects_dict[class_name] = [os.path.splitext(os.path.normpath(obj))[0] for obj in os.listdir(class_path)]
         class_ids[class_name] = i
+        import_from_path(class_path, class_name)
 
 
-
-def delete_duplicates():
+def delete_objects():
     bpy.ops.object.select_all(action='SELECT')
-    for obstacle_name in obstacles_list:
-        bpy.data.objects[obstacle_name].select_set(False)
-    for class_name in class_ids:
-        for obj_name in objects_dict[class_name]:
-            bpy.data.objects[obj_name].select_set(False)
     bpy.ops.object.delete()
+
+def configure_gpu():
+    bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
+
+def create_collections():
+    collection = bpy.data.collections.new("Models")
+    bpy.context.scene.collection.children.link(collection)
+    collection2 = bpy.data.collections.new("Instances")
+    bpy.context.scene.collection.children.link(collection2)
+    collection3 = bpy.data.collections.new("Obstacles")
+    bpy.context.scene.collection.children.link(collection3)
 
 
 def get_cat_id(obj):
@@ -295,19 +297,10 @@ def hair_emission(min_obj_count, max_obj_count, scale):
 
 
 def blender_setup():
+    delete_objects()
+    create_collections()
+    configure_gpu()
 
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete()
-    
-    collection = bpy.data.collections.new("Models")
-    bpy.context.scene.collection.children.link(collection)
-    collection2 = bpy.data.collections.new("Instances")
-    bpy.context.scene.collection.children.link(collection2)
-    collection3 = bpy.data.collections.new("Obstacles")
-    bpy.context.scene.collection.children.link(collection3)
-    
-    bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
 
 
 def render(render_path, render_name="synthetics.png", occlusion_aware=True):
@@ -357,6 +350,7 @@ if __name__ == "__main__":
     classes_list = models_info["classes"]
     scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
     obstacles_path = models_info["obstacles_path"] if "obstacles_path" in models_info else None
+    obstacles_list =  [os.path.splitext(os.path.normpath(obj))[0] for obj in os.listdir(obstacles_path)] if obstacles_path else None
     render_path = models_info["render_to"]
     occlusion_aware = config_info["occlusion_aware"]
     min_camera_height = config_info["min_camera_height"]
@@ -373,14 +367,13 @@ if __name__ == "__main__":
     objects_dict = {} # objects_dict[class_name] = objects_names_list
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
-    obstacles_list = []
 
     blender_setup()
-    import_objects()
 
     for i in range(num_img):
-        render_name = f"synthetics{i}"
-        delete_duplicates()
+        render_name = f"synthetics{i}.png"
+        delete_objects()
+        import_objects()
         create_plane(plane_size, scenes_list=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
