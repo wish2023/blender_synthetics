@@ -31,7 +31,7 @@ sh install_requirements.sh
 
 - Update `data/models.yaml` and `data/config.yaml` as required. Refer to [models](#models) and  [configurations](#configurations) for details.
 - Generate images
-    - `blender --background --python src/render_blender.py`
+    - `blender -b -P src/render_blender.py`
 - Generate annotations
     - `python3 src/create_labels.py`
 
