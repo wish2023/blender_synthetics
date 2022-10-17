@@ -204,11 +204,12 @@ def get_object_names(class_path, class_name=None):
 
 
 def import_objects():
-    obstacles_list = get_object_names(obstacles_path) if obstacles_path else []
+    if obstacles_path: obstacles_list.extend(get_object_names(obstacles_path))
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = get_object_names(class_path, class_name)
         class_ids[class_name] = i
+
 
 
 def delete_duplicates():
@@ -231,66 +232,66 @@ def is_obstacle(obj):
     return obj.name.split('.')[0] in obstacles_list
 
 def hair_emission(min_obj_count, max_obj_count, scale):
-            objects = bpy.data.objects
-            plane = objects["Plane"] 
+    objects = bpy.data.objects
+    plane = objects["Plane"] 
 
-            bpy.context.view_layer.objects.active = plane
-            bpy.ops.object.particle_system_add()
-            
-            particle_count = random.randrange(min_obj_count, max_obj_count)
-            particle_scale = scale
+    bpy.context.view_layer.objects.active = plane
+    bpy.ops.object.particle_system_add()
+    
+    particle_count = random.randrange(min_obj_count, max_obj_count)
+    particle_scale = scale
 
-            ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
-            psys = plane.particle_systems[ps.name]
+    ps = plane.modifiers.new("part", 'PARTICLE_SYSTEM')
+    psys = plane.particle_systems[ps.name]
 
-            psys.settings.type = "HAIR"
-            psys.settings.use_advanced_hair = True
+    psys.settings.type = "HAIR"
+    psys.settings.use_advanced_hair = True
 
-            # EMISSION
-            seed = random.randrange(10000)
-            psys.settings.count = particle_count # param
-            psys.settings.hair_length = particle_scale # param
-            psys.seed = seed
+    # EMISSION
+    seed = random.randrange(10000)
+    psys.settings.count = particle_count # param
+    psys.settings.hair_length = particle_scale # param
+    psys.seed = seed
 
-            # #RENDER
-            psys.settings.render_type = "COLLECTION"
-            plane.show_instancer_for_render = True
-            psys.settings.instance_collection = bpy.data.collections["Models"]
-            psys.settings.particle_size = particle_scale
-            
-            psys.settings.use_scale_instance = True
-            psys.settings.use_rotation_instance = True
-            psys.settings.use_global_instance = True
-            
-            # # ROTATION
-            psys.settings.use_rotations = True
-            psys.settings.rotation_mode = "NOR" # "GLOB_Z"
-            psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
-            psys.settings.child_type = "NONE"
-                
-            plane.select_set(True)
-            bpy.ops.object.duplicates_make_real()
-            plane.modifiers.remove(ps)
-            
-            objs = bpy.context.selected_objects
-            coll_target = bpy.context.scene.collection.children.get("Instances")
-            coll_obstacles = bpy.context.scene.collection.children.get("Obstacles")
-            for i, obj in enumerate(objs):
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                
-                obj_copy = obj
-                obj_copy.data = obj.data.copy()
-                obj_copy.hide_render = False
+    # #RENDER
+    psys.settings.render_type = "COLLECTION"
+    plane.show_instancer_for_render = True
+    psys.settings.instance_collection = bpy.data.collections["Models"]
+    psys.settings.particle_size = particle_scale
+    
+    psys.settings.use_scale_instance = True
+    psys.settings.use_rotation_instance = True
+    psys.settings.use_global_instance = True
+    
+    # # ROTATION
+    psys.settings.use_rotations = True
+    psys.settings.rotation_mode = "NOR" # "GLOB_Z"
+    psys.settings.phase_factor_random = 2.0 # change to random num (0 to 2.0)
+    psys.settings.child_type = "NONE"
+        
+    plane.select_set(True)
+    bpy.ops.object.duplicates_make_real()
+    plane.modifiers.remove(ps)
+    
+    objs = bpy.context.selected_objects
+    coll_target = bpy.context.scene.collection.children.get("Instances")
+    coll_obstacles = bpy.context.scene.collection.children.get("Obstacles")
+    for i, obj in enumerate(objs):
+        for coll in obj.users_collection:
+            coll.objects.unlink(obj)
+        
+        obj_copy = obj
+        obj_copy.data = obj.data.copy()
+        obj_copy.hide_render = False
 
-                if is_target(obj_copy):
-                    coll_target.objects.link(obj_copy)
-                    inst_id = get_cat_id(obj_copy) * 1000 + i + 1 # cannot have inst_id = 0
-                    obj_copy["inst_id"] = inst_id # for bpycv
-                elif is_obstacle(obj_copy):
-                    coll_obstacles.objects.link(obj_copy)
-                else:
-                    raise Exception(obj_copy.name, "is neither an obstacle nor a target")
+        if is_target(obj_copy):
+            coll_target.objects.link(obj_copy)
+            inst_id = get_cat_id(obj_copy) * 1000 + i + 1 # cannot have inst_id = 0
+            obj_copy["inst_id"] = inst_id # for bpycv
+        elif is_obstacle(obj_copy):
+            coll_obstacles.objects.link(obj_copy)
+        else:
+            raise Exception(obj_copy.name, "is neither an obstacle nor a target")
 
 
 def blender_setup():
@@ -333,7 +334,7 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     hidden_obstacles_result = bpycv.render_data(render_image=False)
     bpy.data.objects["Empty"].scale = (1.05, 1.05, 1.05)
     zoomed_out_result = bpycv.render_data(render_image=False)
-    bpy.data.objects["Empty"].scale = (1.05, 1.05, 1.05)
+    bpy.data.objects["Empty"].scale = (1, 1, 1)
 
 
 
@@ -379,7 +380,8 @@ if __name__ == "__main__":
 
     for i in range(num_img):
         render_name = f"synthetics{i}"
-        create_plane(plane_size, texture_path=scenes_list)
+        delete_duplicates()
+        create_plane(plane_size, scenes_list=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
         hair_emission(min_obj_count, max_obj_count, scale=1)
