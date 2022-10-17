@@ -313,6 +313,7 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
     occ_aware_seg_path = os.path.join(render_path, "seg_maps")
     occ_ignore_seg_path = os.path.join(render_path, "other_seg_maps")
+    zoomed_out_seg_path = os.path.join(render_path, "zoomed_out_seg_maps")
     
     if not os.path.isdir(render_path):
         os.mkdir(render_path)
@@ -322,17 +323,24 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
         os.mkdir(occ_aware_seg_path)
     if not os.path.isdir(occ_ignore_seg_path):
         os.mkdir(occ_ignore_seg_path)
+    if not os.path.isdir(zoomed_out_seg_path):
+        os.mkdir(zoomed_out_seg_path)
 
 
     result = bpycv.render_data()
     for obj in bpy.data.collections['Obstacles'].all_objects:
         obj.hide_render = True
     hidden_obstacles_result = bpycv.render_data(render_image=False)
+    bpy.data.objects["Empty"].scale = (1.05, 1.05, 1.05)
+    zoomed_out_result = bpycv.render_data(render_image=False)
+    bpy.data.objects["Empty"].scale = (1.05, 1.05, 1.05)
+
 
 
     cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
     cv2.imwrite(os.path.join(occ_aware_seg_path, render_name), np.uint16(result["inst"]))
     cv2.imwrite(os.path.join(occ_ignore_seg_path, render_name), np.uint16(hidden_obstacles_result["inst"]))
+    cv2.imwrite(os.path.join(zoomed_out_seg_path, render_name), np.uint16(zoomed_out_result["inst"]))
 
     
 

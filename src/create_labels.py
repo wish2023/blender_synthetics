@@ -24,12 +24,12 @@ results_dir = models_info["render_to"]
 classes = [os.path.basename(os.path.normpath(class_path)) for class_path in models_info["classes"]]
 num_classes = len(models_info["classes"])
 
+img_path = os.path.join(results_dir, "img")
 occ_aware_seg_path = os.path.join(results_dir, "seg_maps")
 occ_ignore_seg_path = os.path.join(results_dir, "other_seg_maps")
+zoomed_out_seg_path = os.path.join(results_dir, "zoomed_out_seg_maps")
 yolo_annotated_path = os.path.join(results_dir, "yolo_annotated")
 obb_annotated_path = os.path.join(results_dir, "obb_annotated")
-# coco_annotated_path = os.path.join(results_dir, "coco_annotated")
-img_path = os.path.join(results_dir, "img")
 yolo_labels_path = os.path.join(results_dir, "yolo_labels")
 obb_labels_path = os.path.join(results_dir, "obb_labels")
 
@@ -38,8 +38,6 @@ if not os.path.isdir(yolo_annotated_path):
     os.mkdir(yolo_annotated_path)
 if not os.path.isdir(obb_annotated_path):
     os.mkdir(obb_annotated_path)
-# if not os.path.isdir(coco_annotated_path):
-#     os.mkdir(coco_annotated_path)
 if not os.path.isdir(yolo_labels_path):
     os.mkdir(yolo_labels_path)
 if not os.path.isdir(obb_labels_path):
@@ -94,6 +92,9 @@ def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
     return ccw(x1, y1 ,x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4) and \
         ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4)
 
+def is_inst_on_edge(x_bb, y_bb, w, h, img):
+    return x_bb == 0 or y_bb == 0 or x_bb+w == img.shape[1] or y_bb+h == img.shape[0]
+
 
 for i in range(num_classes):
     cat_info = {
@@ -113,6 +114,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
     occ_aware_seg_map = cv2.imread(os.path.join(occ_aware_seg_path, img_filename), -1)
     occ_ignore_seg_map = cv2.imread(os.path.join(occ_ignore_seg_path, img_filename), -1)
+    zoomed_out_seg_map = cv2.imread(os.path.join(zoomed_out_seg_path, img_filename), -1)
     img = cv2.imread(os.path.join(img_path, img_filename))
 
     img_h, img_w = occ_aware_seg_map.shape[:2]
@@ -136,11 +138,11 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
     for inst in instances:
         cat_id = int(inst // 1000)
 
-        if not is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, visibility_thresh): # is it being occluded too much
+        if not is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, visibility_thresh):
             continue
 
         if occlusion_aware:
-            remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, component_visibility_thresh) # remove components with too few pixels
+            remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, component_visibility_thresh)
             seg_map = occ_aware_seg_map
         else:
             seg_map = occ_ignore_seg_map
@@ -149,12 +151,17 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
         if points is None:
             continue
         x_bb, y_bb, w, h = cv2.boundingRect(points)
-
-        if occlusion_aware == False and (x_bb == 0 or y_bb == 0 or x_bb+w == img.shape[1] or y_bb+h == img.shape[0]): # bounding box on edge, object partially not in frame
-            continue # re-adjust bb if occlusion_aware, so that OBBs don't extend image
-
         obb = cv2.minAreaRect(points)
         obb_points = cv2.boxPoints(obb).astype(int)
+
+        if occlusion_aware and is_inst_on_edge(x_bb, y_bb, w, h, img):
+            if not is_inst_visible(inst, occ_aware_seg_map, zoomed_out_seg_map, visibility_thresh):
+                continue
+        elif not occlusion_aware and is_inst_on_edge(x_bb, y_bb, w, h, img):
+            img = cv2.fillPoly(img, [obb_points], color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+            continue
+
+ 
 
         for i in range(obb_points.shape[0]): # for line segment
             x1, y1, x2, y2 = obb_points[i][0], obb_points[i][1], \
@@ -187,7 +194,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
                         img = cv2.fillPoly(img, [obb_points], color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
                         img = cv2.fillPoly(img, [obb_points2], color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
 
-                        continue
+
 
 
         if view_annotations and len(bb_ann["xc"]) not in overlapping: # if current instance isn't overlapping
