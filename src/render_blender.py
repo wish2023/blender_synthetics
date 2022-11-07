@@ -14,6 +14,14 @@ import yaml
 
 
 def create_plane(plane_size=500, scenes_list=None):
+    """
+    Create surface to place objects on
+
+    Args:
+        plane_size: Length of plane side
+        scenes_list: Directories containing custom textures
+    """
+
     scene = random.choice(scenes_list) if scenes_list else None
 
     subdivide_count = 100
@@ -33,6 +41,9 @@ def create_plane(plane_size=500, scenes_list=None):
 
    
 def generate_texture(texture_path):
+    """
+    Create blender nodes for imported texture
+    """
 
     img_tex = glob.glob(os.path.join(texture_path, "*_diff_*"))[0]
     img_rough = glob.glob(os.path.join(texture_path, "*_rough_*"))[0]
@@ -92,6 +103,9 @@ def generate_texture(texture_path):
 
 
 def generate_random_background():
+    """
+    Create blender nodes for random colour pattern
+    """
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
@@ -131,6 +145,14 @@ def generate_random_background():
 
 
 def add_sun(min_sun_energy, max_sun_energy, max_sun_tilt):
+    """
+    Create light source with random intensity and ray angles
+
+    Args:
+        min_sun_energy: Minimum power of sun
+        max_sun_energy: Maximum power of sun
+        max_sun_tilt: Maximum angle of sun's rays
+    """
 
     bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
     bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
@@ -140,6 +162,14 @@ def add_sun(min_sun_energy, max_sun_energy, max_sun_tilt):
     
     
 def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
+    """
+    Create camera with random height and viewing angles
+
+    Args:
+        min_camera_height: Minimum height of camera
+        max_camera_height: Maximum height of camera
+        max_camera_tilt: Maximum viewing angle
+    """
 
     z = random.randrange(min_camera_height, max_camera_height)
     bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
@@ -157,7 +187,18 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
     bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
 
+def print_inputs():
+    pass
+
 def import_from_path(class_path, class_name=None):
+    """
+    Import 3D models into scene given directory
+
+    Args:
+        class_path: Directory containing 3D objects
+        class_name: Object class. Defaults to None if object type is irrelevant.
+    """
+
     for filename in os.listdir(class_path):
         filepath = os.path.join(class_path, filename)
         obj_name = os.path.splitext(filepath)[0].split("/")[-1]
@@ -191,6 +232,10 @@ def import_from_path(class_path, class_name=None):
 
 
 def import_objects():
+    """
+    Import all objects into scene
+    """
+
     if obstacles_path: import_from_path(obstacles_path)
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
@@ -200,10 +245,16 @@ def import_objects():
 
 
 def delete_objects():
+    """
+    Delete all objects from scene
+    """
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
 
 def configure_gpu():
+    """
+    Use GPU if available
+    """
     bpy.context.scene.render.engine = 'CYCLES'
     bpy.context.scene.cycles.samples = 200
     bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
@@ -211,7 +262,10 @@ def configure_gpu():
 
 
 def create_collections():
-    collection = bpy.data.collections.new("Models")
+    """
+    Create blender collections for all 3D models
+    """
+    collection = bpy.data.collections.new("Models") # not rendered
     bpy.context.scene.collection.children.link(collection)
     collection2 = bpy.data.collections.new("Instances")
     bpy.context.scene.collection.children.link(collection2)
@@ -220,15 +274,50 @@ def create_collections():
 
 
 def get_cat_id(obj):
+    """
+    Args:
+        obj: Blender object
+
+    Returns:
+        Class ID of object
+    """
+
     return class_ids[parent_class[obj.name.split('.')[0]]]
 
 def is_target(obj):
+    """
+    Args:
+        obj: Blender object
+
+    Returns:
+        True if object's class is to be annotated
+    """
+
     return obj.name.split('.')[0] in parent_class
 
 def is_obstacle(obj):
+    """
+    Args:
+        obj: Blender object
+
+    Returns:
+        True if object is an obstacle
+    """
+
     return obj.name.split('.')[0] in obstacles_list
 
-def hair_emission(min_obj_count, max_obj_count, scale):
+def hair_emission(min_obj_count, max_obj_count, scale=1):
+    """
+    Emit 3D models from plane
+
+    Args:
+        min_obj_count: Minimum number of objects in scene
+        max_obj_count: Maximum number of objects in scene
+
+    Raises:
+        Exception: When emitted object is neither a target nor an obstacle
+    """
+
     objects = bpy.data.objects
     plane = objects["Plane"] 
 
@@ -246,8 +335,8 @@ def hair_emission(min_obj_count, max_obj_count, scale):
 
     # EMISSION
     seed = random.randrange(10000)
-    psys.settings.count = particle_count # param
-    psys.settings.hair_length = particle_scale # param
+    psys.settings.count = particle_count
+    psys.settings.hair_length = particle_scale
     psys.seed = seed
 
     # #RENDER
@@ -292,12 +381,22 @@ def hair_emission(min_obj_count, max_obj_count, scale):
 
 
 def blender_setup():
+    """
+    Initial blender setup
+    """
     delete_objects()
     create_collections()
     configure_gpu()
 
 
-def render(render_path, render_name="synthetics.png", occlusion_aware=True):
+def render(render_path, render_name="synthetics.png"):
+    """
+    Render scene
+
+    Args:
+        render_path: Directory to save render to
+        render_name: Filename of render to be saved
+    """
     img_path = os.path.join(render_path, "img")
     occ_aware_seg_path = os.path.join(render_path, "seg_maps")
     occ_ignore_seg_path = os.path.join(render_path, "other_seg_maps")
@@ -340,7 +439,6 @@ if __name__ == "__main__":
     obstacles_path = models_info["obstacles_path"] if "obstacles_path" in models_info else None
     obstacles_list =  [os.path.splitext(os.path.normpath(obj))[0] for obj in os.listdir(obstacles_path)] if obstacles_path else None
     render_path = models_info["render_to"]
-    occlusion_aware = config_info["occlusion_aware"]
     min_camera_height = config_info["min_camera_height"]
     max_camera_height = config_info["max_camera_height"]
     max_camera_tilt = config_info["max_camera_tilt"]
@@ -356,6 +454,7 @@ if __name__ == "__main__":
     class_ids = {} # class_ids[class_name] = i
     parent_class = {} # parent_class[obj_name] = class_name
 
+    print_inputs()
     blender_setup()
 
     for i in range(num_img):
@@ -370,8 +469,8 @@ if __name__ == "__main__":
         create_plane(plane_size, scenes_list=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
-        hair_emission(min_obj_count, max_obj_count, scale=1)
-        render(render_path, render_name, occlusion_aware)
+        hair_emission(min_obj_count, max_obj_count)
+        render(render_path, render_name)
 
         print("---------------------------------------")
         print(f"Image {i+1} of {num_img} complete")

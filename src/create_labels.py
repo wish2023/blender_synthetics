@@ -52,6 +52,17 @@ for i in range(num_classes):
 
 
 def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
+    """
+    Args:
+        inst: Instance ID of object
+        occ_aware_seg_map: Original segmentation map
+        occ_ignore_seg_map: Segmentation map with obstacles removed 
+        thresh: portion of obj that needs to be visible
+
+    Returns:
+        True if obj is considered visible to human
+    """
+
     visibility = np.count_nonzero(occ_aware_seg_map == inst) / np.count_nonzero(occ_ignore_seg_map == inst)
     if visibility >= thresh:
         return True
@@ -60,6 +71,16 @@ def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
 
 
 def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
+    """
+    Remove components of objects that aren't visible to human
+
+    Args:
+        inst: Instance ID of object
+        occ_aware_seg_map: Original segmentation map
+        occ_ignore_seg_map: Segmentation map with obstacles removed
+        thresh: portion of obj that needs to be visible
+    """
+
     inst_size = np.count_nonzero(occ_ignore_seg_map == inst)
     seg_map_copy = np.copy(occ_aware_seg_map)
     seg_map_copy[occ_aware_seg_map != inst] = 0
@@ -75,6 +96,10 @@ def remove_small_components(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh)
 
 
 def binary_mask_to_rle(binary_mask):
+    """
+    Convert binary mask to run length encoding.
+    """
+
     rle = {'counts': [], 'size': list(binary_mask.shape)}
     counts = rle.get('counts')
     for i, (value, elements) in enumerate(groupby(binary_mask.ravel(order='F'))):
@@ -84,15 +109,41 @@ def binary_mask_to_rle(binary_mask):
     return rle
 
 
-# Return true if line segments intersect
 def intersect(x1, y1, x2, y2, x3, y3, x4, y4):
+    """
+    Args:
+        x1: Line 1 x coordinate of start point
+        y1: Line 1 y coordinate of start point
+        x2: Line 1 x coordinate of end point
+        y2: Line 1 y coordinate of end point
+        x3: Line 2 x coordinate of start point
+        y3: Line 2 y coordinate of start point
+        x4: Line 2 x coordinate of end point
+        y4: Line 2 y coordinate of end point
+
+    Returns:
+        True if lines intersect
+    """
     def ccw(x1, y1, x2, y2, x3, y3):
         return (y3-y1) * (x2-x1) > (y2-y1) * (x3-x1)
 
     return ccw(x1, y1 ,x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4) and \
         ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4)
 
+
 def is_inst_on_edge(x_bb, y_bb, w, h, img):
+    """
+
+    Args:
+        x_bb: Bounding box top left x coordinate
+        y_bb: Bounding box top left y coordinate
+        w: Bounding box width
+        h: Bounding box height
+        img: np array of image
+
+    Returns:
+        True if bounding box lies on edge of image
+    """
     return x_bb == 0 or y_bb == 0 or x_bb+w == img.shape[1] or y_bb+h == img.shape[0]
 
 
