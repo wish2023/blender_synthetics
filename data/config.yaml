@@ -4,16 +4,16 @@ occlusion_aware: True
 visibility_thresh: 0.3
 component_visibility_thresh: 0.1
 
-plane_size: 150
+plane_size: 150 # metres
 min_obj_count: 50 # min number of objects in scene
 max_obj_count: 100 # max number of objects in scene
 
-min_camera_height: 200
-max_camera_height: 250
-max_camera_tilt: 30
+min_camera_height: 200 # metres
+max_camera_height: 250 # metres
+max_camera_tilt: 30 # degrees
 
-min_sun_energy: 1
-max_sun_energy: 10
-max_sun_tilt: 70
+min_sun_energy: 1 # W/m^2
+max_sun_energy: 10 # W/m^2
+max_sun_tilt: 70 # degrees
 
 num_img: 2 # number of images to render
