@@ -39,12 +39,10 @@ def generate_texture(texture_path):
     img_norm = glob.glob(os.path.join(texture_path, "*_nor_gl_*"))[0]
     img_dis = glob.glob(os.path.join(texture_path, "*_disp_*"))[0]
 
-
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
     bpy.context.object.active_material = material_basic
     nodes = material_basic.node_tree.nodes
-
 
     principled_node = nodes.get("Principled BSDF")
     node_out = nodes.get("Material Output")
@@ -122,7 +120,6 @@ def generate_random_background():
     voronoi_output = random.randint(0,2)
     link(voronoi_node.outputs[voronoi_output], colorramp_node.inputs[0])
 
-
     num_elements = random.randint(5, 15)
 
     for i in range(num_elements - 2):
@@ -133,7 +130,7 @@ def generate_random_background():
         colorramp_node.color_ramp.elements[i].color = (random.random(), random.random(), random.random(),1)
 
 
-def add_sun(min_sun_energy, max_sun_energy, min_sun_tilt):
+def add_sun(min_sun_energy, max_sun_energy):
 
     bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
     bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
@@ -175,8 +172,7 @@ def import_from_path(class_path, class_name=None):
             bpy.ops.wm.append(
                 filepath=os.path.join(filepath, blender_path),
                 directory=os.path.join(filepath, "Object"),
-                filename=obj_name
-                )
+                filename=obj_name)
         else:
             continue
         
@@ -334,9 +330,9 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
 if __name__ == "__main__":
 
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config/models.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender_synthetics/config/models.yaml") as file:
         models_info = yaml.load(file, Loader=yaml.FullLoader)
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config/render_parameters.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender_synthetics/config/render_parameters.yaml") as file:
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
