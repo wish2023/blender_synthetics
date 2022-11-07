@@ -199,7 +199,7 @@ def import_from_path(class_path, class_name=None):
 
 
 def import_objects():
-    import_from_path(obstacles_path)
+    if obstacles_path: import_from_path(obstacles_path)
     for i, class_path in enumerate(classes_list):
         class_name = os.path.basename(os.path.normpath(class_path))
         objects_dict[class_name] = [os.path.splitext(os.path.normpath(obj))[0] for obj in os.listdir(class_path)]
@@ -213,7 +213,10 @@ def delete_objects():
 
 def configure_gpu():
     bpy.context.scene.render.engine = 'CYCLES'
+    bpy.context.scene.cycles.samples = 200
     bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
+    print(f"Using {bpy.context.scene.cycles.device}")
+
 
 def create_collections():
     collection = bpy.data.collections.new("Models")
@@ -374,6 +377,11 @@ if __name__ == "__main__":
         render_name = f"synthetics{i}.png"
         delete_objects()
         import_objects()
+
+        print("---------------------------------------")
+        print("Objects imported")
+        print("---------------------------------------")
+
         create_plane(plane_size, scenes_list=scenes_list)
         add_sun(min_sun_energy, max_sun_energy, max_sun_tilt)
         add_camera(min_camera_height, max_camera_height, max_camera_tilt)
