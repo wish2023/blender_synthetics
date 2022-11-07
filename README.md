@@ -76,4 +76,4 @@ The fraction of an object components that must be visible by the camera for it t
 
 ### Sun
 
-The sun's energy is the light intensity on the scene. The tilt is responsible for casting shadows and works similar to the camera's tilt.
+The sun's [energy](https://docs.blender.org/manual/en/latest/render/lights/light_object.html) is the light intensity on the scene. The tilt is responsible for casting shadows and works similar to the camera's tilt.
