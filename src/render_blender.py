@@ -130,7 +130,7 @@ def generate_random_background():
         colorramp_node.color_ramp.elements[i].color = (random.random(), random.random(), random.random(),1)
 
 
-def add_sun(min_sun_energy, max_sun_energy):
+def add_sun(min_sun_energy, max_sun_energy, max_sun_tilt):
 
     bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
     bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
