@@ -1,8 +1,8 @@
 classes:
   - "/home/vishesh/Desktop/synthetics/models/small_vehicles/"
 
-obstacles_path: "/home/vishesh/Desktop/synthetics/models/obstacles/" # optional
-
-scenes: "/home/vishesh/Downloads/all_textures" # optional
-
 render_to: "/home/vishesh/Desktop/synthetics/results"
+
+# Optional
+# obstacles_path: "/home/vishesh/Desktop/synthetics/models/obstacles/"
+# scenes: "/home/vishesh/Downloads/all_textures"
