@@ -345,9 +345,9 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
 
 if __name__ == "__main__":
 
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/models.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config/models.yaml") as file:
         models_info = yaml.load(file, Loader=yaml.FullLoader)
-    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/data/config.yaml") as file:
+    with open("/home/vishesh/Desktop/synthetics/blender-synthetics/config/render_parameters.yaml") as file:
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
     classes_list = models_info["classes"]
