@@ -187,10 +187,11 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
                         overlapping.add(bb_ind)
                         overlapping.add(len(bb_ann["xc"]))
 
-                        img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=(0,0,255), thickness=3)
-                        img_obb = cv2.polylines(img_obb, [obb_points2], isClosed=True, color=(0,0,255), thickness=3)
-                        img_bb = cv2.rectangle(img_bb, (x_bb, y_bb), (x_bb+w, y_bb+h), color=(0,0,255), thickness=3)
-                        img_bb = cv2.rectangle(img_bb, (x_bb2, y_bb2), (x_bb2+w2, y_bb2+h2), color=(0,0,255), thickness=3)
+                        if view_annotations:
+                            img_obb = cv2.polylines(img_obb, [obb_points], isClosed=True, color=(0,0,255), thickness=3)
+                            img_obb = cv2.polylines(img_obb, [obb_points2], isClosed=True, color=(0,0,255), thickness=3)
+                            img_bb = cv2.rectangle(img_bb, (x_bb, y_bb), (x_bb+w, y_bb+h), color=(0,0,255), thickness=3)
+                            img_bb = cv2.rectangle(img_bb, (x_bb2, y_bb2), (x_bb2+w2, y_bb2+h2), color=(0,0,255), thickness=3)
                         img = cv2.fillPoly(img, [obb_points], color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
                         img = cv2.fillPoly(img, [obb_points2], color=(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
 
