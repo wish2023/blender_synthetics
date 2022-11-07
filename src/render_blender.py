@@ -13,7 +13,6 @@ import glob
 import yaml
 
 
-
 def create_plane(plane_size=500, scenes_list=None):
     scene = random.choice(scenes_list) if scenes_list else None
 
@@ -31,7 +30,8 @@ def create_plane(plane_size=500, scenes_list=None):
         generate_texture(scene)
     else:
         generate_random_background()
-        
+
+   
 def generate_texture(texture_path):
 
     img_tex = glob.glob(os.path.join(texture_path, "*_diff_*"))[0]
@@ -93,8 +93,6 @@ def generate_texture(texture_path):
     link(node_disp.outputs["Displacement"], node_out.inputs["Displacement"])
 
 
-
-
 def generate_random_background():
 
     material_basic = bpy.data.materials.new(name="Basic")
@@ -134,6 +132,7 @@ def generate_random_background():
         colorramp_node.color_ramp.elements[i].position = i * (1 / (num_elements-1))
         colorramp_node.color_ramp.elements[i].color = (random.random(), random.random(), random.random(),1)
 
+
 def add_sun(min_sun_energy, max_sun_energy, min_sun_tilt):
 
     bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
@@ -159,8 +158,6 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
 
     bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
     bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
-    
-
     
 
 def import_from_path(class_path, class_name=None):
@@ -195,7 +192,6 @@ def import_from_path(class_path, class_name=None):
         for coll in object.users_collection:
             coll.objects.unlink(object)
         context.scene.collection.children.get("Models").objects.link(object)
-
 
 
 def import_objects():
@@ -305,7 +301,6 @@ def blender_setup():
     configure_gpu()
 
 
-
 def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     img_path = os.path.join(render_path, "img")
     occ_aware_seg_path = os.path.join(render_path, "seg_maps")
@@ -323,7 +318,6 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     if not os.path.isdir(zoomed_out_seg_path):
         os.mkdir(zoomed_out_seg_path)
 
-
     result = bpycv.render_data()
     for obj in bpy.data.collections['Obstacles'].all_objects:
         obj.hide_render = True
@@ -332,15 +326,10 @@ def render(render_path, render_name="synthetics.png", occlusion_aware=True):
     zoomed_out_result = bpycv.render_data(render_image=False)
     bpy.data.objects["Empty"].scale = (1, 1, 1)
 
-
-
     cv2.imwrite(os.path.join(img_path, render_name), result["image"][..., ::-1])
     cv2.imwrite(os.path.join(occ_aware_seg_path, render_name), np.uint16(result["inst"]))
     cv2.imwrite(os.path.join(occ_ignore_seg_path, render_name), np.uint16(hidden_obstacles_result["inst"]))
     cv2.imwrite(os.path.join(zoomed_out_seg_path, render_name), np.uint16(zoomed_out_result["inst"]))
-
-    
-
 
 
 if __name__ == "__main__":
