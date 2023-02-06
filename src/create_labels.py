@@ -51,19 +51,19 @@ for i in range(num_classes):
     colors[i] = random_color
 
 
-def is_inst_visible(inst, occ_aware_seg_map, occ_ignore_seg_map, thresh):
+def is_inst_visible(inst, occ_aware_seg_map, clear_seg_map, thresh):
     """
     Args:
         inst: Instance ID of object
         occ_aware_seg_map: Original segmentation map
-        occ_ignore_seg_map: Segmentation map with obstacles removed 
+        clear_seg_map: Segmentation map with fully visible objects
         thresh: portion of obj that needs to be visible
 
     Returns:
         True if obj is considered visible to human
     """
 
-    visibility = np.count_nonzero(occ_aware_seg_map == inst) / np.count_nonzero(occ_ignore_seg_map == inst)
+    visibility = np.count_nonzero(occ_aware_seg_map == inst) / np.count_nonzero(clear_seg_map == inst)
     if visibility >= thresh:
         return True
     else:
@@ -203,7 +203,7 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
             continue
         x_bb, y_bb, w, h = cv2.boundingRect(points)
         obb = cv2.minAreaRect(points)
-        obb_points = cv2.boxPoints(obb).astype(int)
+        obb_points = cv2.boxPoints(obb).astype(int) # 4 x 2 --> 4 points for bounding box
 
         if occlusion_aware and is_inst_on_edge(x_bb, y_bb, w, h, img):
             if not is_inst_visible(inst, occ_aware_seg_map, zoomed_out_seg_map, visibility_thresh):
@@ -214,9 +214,11 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
  
 
-        for i in range(obb_points.shape[0]): # for line segment
+        for i in range(obb_points.shape[0]):
+            # iterate through line segments
             x1, y1, x2, y2 = obb_points[i][0], obb_points[i][1], \
-                                obb_points[(i+1) % obb_points.shape[0]][0], obb_points[(i+1) % obb_points.shape[0]][1]
+                                obb_points[(i+1) % obb_points.shape[0]][0], \
+                                obb_points[(i+1) % obb_points.shape[0]][1]
             
             for bb_ind in range(len(bb_ann["xc"])): # number of boxes in img so far
                 obb_points2 = np.array([[bb_ann["obb1x"][bb_ind], bb_ann["obb1y"][bb_ind]], 
@@ -230,8 +232,10 @@ for img_id, img_filename in enumerate(os.listdir(img_path), start=1):
 
 
                 for k in range(obb_points2.shape[0]):
+                    # iterate through second set of line segments
                     x3, y3, x4, y4 = obb_points2[k][0], obb_points2[k][1], \
-                                obb_points2[(k+1) % obb_points2.shape[0]][0], obb_points2[(k+1) % obb_points2.shape[0]][1]
+                                obb_points2[(k+1) % obb_points2.shape[0]][0], \
+                                obb_points2[(k+1) % obb_points2.shape[0]][1]
 
                     
                     if intersect(x1, y1, x2, y2, x3, y3, x4, y4):

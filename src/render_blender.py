@@ -1,5 +1,5 @@
 import bpy
-from bpy import context
+from bpy import context, ops
 
 import bpycv
 import cv2
@@ -9,8 +9,8 @@ import numpy as np
 import random
 
 import os
-import glob
 import yaml
+from glob import glob
 
 
 def create_plane(plane_size=500, scenes_list=None):
@@ -25,14 +25,10 @@ def create_plane(plane_size=500, scenes_list=None):
     scene = random.choice(scenes_list) if scenes_list else None
 
     subdivide_count = 100
-    bpy.ops.mesh.primitive_plane_add(size=plane_size, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-    bpy.ops.object.editmode_toggle()
-    bpy.ops.mesh.subdivide(number_cuts=subdivide_count)
-        
-    objects = bpy.data.objects
-    plane = objects["Plane"]
-
-    bpy.ops.object.editmode_toggle()
+    ops.mesh.primitive_plane_add(size=plane_size, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    ops.object.editmode_toggle()
+    ops.mesh.subdivide(number_cuts=subdivide_count)
+    ops.object.editmode_toggle()
 
     if scene:
         generate_texture(scene)
@@ -45,14 +41,14 @@ def generate_texture(texture_path):
     Create blender nodes for imported texture
     """
 
-    img_tex = glob.glob(os.path.join(texture_path, "*_diff_*"))[0]
-    img_rough = glob.glob(os.path.join(texture_path, "*_rough_*"))[0]
-    img_norm = glob.glob(os.path.join(texture_path, "*_nor_gl_*"))[0]
-    img_dis = glob.glob(os.path.join(texture_path, "*_disp_*"))[0]
+    img_tex = glob(os.path.join(texture_path, "*_diff_*"))[0]
+    img_rough = glob(os.path.join(texture_path, "*_rough_*"))[0]
+    img_norm = glob(os.path.join(texture_path, "*_nor_gl_*"))[0]
+    img_dis = glob(os.path.join(texture_path, "*_disp_*"))[0]
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
-    bpy.context.object.active_material = material_basic
+    context.object.active_material = material_basic
     nodes = material_basic.node_tree.nodes
 
     principled_node = nodes.get("Principled BSDF")
@@ -109,7 +105,7 @@ def generate_random_background():
 
     material_basic = bpy.data.materials.new(name="Basic")
     material_basic.use_nodes = True
-    bpy.context.object.active_material = material_basic
+    context.object.active_material = material_basic
     nodes = material_basic.node_tree.nodes
 
     principled_node = nodes.get("Principled BSDF")
@@ -154,11 +150,11 @@ def add_sun(min_sun_energy, max_sun_energy, max_sun_tilt):
         max_sun_tilt: Maximum angle of sun's rays
     """
 
-    bpy.ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
-    bpy.context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
-    bpy.context.scene.objects["Sun"].rotation_euler[0] = random.uniform(0, math.radians(max_sun_tilt))
-    bpy.context.scene.objects["Sun"].rotation_euler[1] = random.uniform(0, math.radians(max_sun_tilt))
-    bpy.context.scene.objects["Sun"].rotation_euler[2] = random.uniform(0, 2*math.pi)
+    ops.object.light_add(type='SUN', radius=10, align='WORLD', location=(0,0,0), scale=(10, 10, 1))
+    context.scene.objects["Sun"].data.energy = random.randrange(min_sun_energy, max_sun_energy)
+    context.scene.objects["Sun"].rotation_euler[0] = random.uniform(0, math.radians(max_sun_tilt))
+    context.scene.objects["Sun"].rotation_euler[1] = random.uniform(0, math.radians(max_sun_tilt))
+    context.scene.objects["Sun"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
     
 def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
@@ -172,19 +168,19 @@ def add_camera(min_camera_height, max_camera_height, max_camera_tilt):
     """
 
     z = random.randrange(min_camera_height, max_camera_height)
-    bpy.ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
-    bpy.context.scene.camera = context.object
+    ops.object.camera_add(enter_editmode=False, align='VIEW', location=(0,0,z), rotation=(0, 0, 0), scale=(1, 1, 1))
+    context.scene.camera = context.object
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
 
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.context.scene.objects["Camera"].select_set(True)
-    bpy.context.scene.objects["Empty"].select_set(True)
-    bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
-    bpy.ops.object.select_all(action='DESELECT')
+    ops.object.select_all(action='DESELECT')
+    context.scene.objects["Camera"].select_set(True)
+    context.scene.objects["Empty"].select_set(True)
+    ops.object.parent_set(type='OBJECT', keep_transform=False)
+    ops.object.select_all(action='DESELECT')
 
-    bpy.context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
-    bpy.context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
+    context.scene.objects["Empty"].rotation_euler[0] = random.uniform(0, math.radians(max_camera_tilt))
+    context.scene.objects["Empty"].rotation_euler[2] = random.uniform(0, 2*math.pi)
     
 
 def print_inputs():
@@ -205,12 +201,12 @@ def import_from_path(class_path, class_name=None):
         ext = os.path.splitext(filepath)[1]
 
         if ext == ".fbx":
-            bpy.ops.import_scene.fbx(filepath=filepath)
+            ops.import_scene.fbx(filepath=filepath)
         elif ext == ".obj":
-            bpy.ops.import_scene.obj(filepath=filepath)
+            ops.import_scene.obj(filepath=filepath)
         elif ext == ".blend":
             blender_path = os.path.join("Object", obj_name)
-            bpy.ops.wm.append(
+            ops.wm.append(
                 filepath=os.path.join(filepath, blender_path),
                 directory=os.path.join(filepath, "Object"),
                 filename=obj_name)
@@ -220,7 +216,7 @@ def import_from_path(class_path, class_name=None):
         if class_name:
             parent_class[obj_name] = class_name
 
-        bpy.ops.object.select_all(action='DESELECT') # May be redundant
+        ops.object.select_all(action='DESELECT') # May be redundant
         
         object = bpy.data.objects[obj_name]
         object.hide_render = True
@@ -248,17 +244,17 @@ def delete_objects():
     """
     Delete all objects from scene
     """
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete()
+    ops.object.select_all(action='SELECT')
+    ops.object.delete()
 
 def configure_gpu():
     """
     Use GPU if available
     """
-    bpy.context.scene.render.engine = 'CYCLES'
-    bpy.context.scene.cycles.samples = 200
-    bpy.context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
-    print(f"Using {bpy.context.scene.cycles.device}")
+    context.scene.render.engine = 'CYCLES'
+    context.scene.cycles.samples = 200
+    context.scene.cycles.device = 'GPU' if context.preferences.addons["cycles"].preferences.has_active_device() else 'CPU'
+    print(f"Using {context.scene.cycles.device}")
 
 
 def create_collections():
@@ -266,11 +262,11 @@ def create_collections():
     Create blender collections for all 3D models
     """
     collection = bpy.data.collections.new("Models") # not rendered
-    bpy.context.scene.collection.children.link(collection)
+    context.scene.collection.children.link(collection)
     collection2 = bpy.data.collections.new("Instances")
-    bpy.context.scene.collection.children.link(collection2)
+    context.scene.collection.children.link(collection2)
     collection3 = bpy.data.collections.new("Obstacles")
-    bpy.context.scene.collection.children.link(collection3)
+    context.scene.collection.children.link(collection3)
 
 
 def get_cat_id(obj):
@@ -321,8 +317,8 @@ def hair_emission(min_obj_count, max_obj_count, scale=1):
     objects = bpy.data.objects
     plane = objects["Plane"] 
 
-    bpy.context.view_layer.objects.active = plane
-    bpy.ops.object.particle_system_add()
+    context.view_layer.objects.active = plane
+    ops.object.particle_system_add()
     
     particle_count = random.randrange(min_obj_count, max_obj_count)
     particle_scale = scale
@@ -356,12 +352,12 @@ def hair_emission(min_obj_count, max_obj_count, scale=1):
     psys.settings.child_type = "NONE"
         
     plane.select_set(True)
-    bpy.ops.object.duplicates_make_real()
+    ops.object.duplicates_make_real()
     plane.modifiers.remove(ps)
     
-    objs = bpy.context.selected_objects
-    coll_target = bpy.context.scene.collection.children.get("Instances")
-    coll_obstacles = bpy.context.scene.collection.children.get("Obstacles")
+    objs = context.selected_objects
+    coll_target = context.scene.collection.children.get("Instances")
+    coll_obstacles = context.scene.collection.children.get("Obstacles")
     for i, obj in enumerate(objs):
         for coll in obj.users_collection:
             coll.objects.unlink(obj)
