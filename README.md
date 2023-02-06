@@ -1,4 +1,4 @@
-# Blender Synthetcis
+# Blender Synthetics
 
 Create your own synthetic dataset for object detection.
 
