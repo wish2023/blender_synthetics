@@ -16,6 +16,12 @@ with open("/home/vishesh/Desktop/synthetics/blender_synthetics/config/render_par
 with open("/home/vishesh/Desktop/synthetics/blender_synthetics/config/models.yaml") as file:
     models_info = yaml.load(file, Loader=yaml.FullLoader)
 
+for key, value in models_info.items():
+    print(f"{key}: {value}")
+
+for key, value in config_info.items():
+    print(f"{key}: {value}")
+
 view_annotations = config_info["view_annotations"]
 occlusion_aware = config_info["occlusion_aware"]
 visibility_thresh = config_info["visibility_thresh"]

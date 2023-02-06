@@ -430,6 +430,12 @@ if __name__ == "__main__":
     with open("/home/vishesh/Desktop/synthetics/blender_synthetics/config/render_parameters.yaml") as file:
         config_info = yaml.load(file, Loader=yaml.FullLoader)
 
+    for key, value in models_info.items():
+        print(f"{key}: {value}")
+
+    for key, value in config_info.items():
+        print(f"{key}: {value}")
+
     classes_list = models_info["classes"]
     scenes_list = [os.path.join(models_info["scenes"], s) for s in os.listdir(models_info["scenes"])] if "scenes" in models_info else None
     obstacles_path = models_info["obstacles_path"] if "obstacles_path" in models_info else None
