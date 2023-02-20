@@ -29,13 +29,14 @@ sh install_requirements.sh
 
 ## Generate synthetics
 
-- Update `data/models.yaml` and `data/config.yaml` as required. Refer to [models](#models) and  [configurations](#configurations) for details.
+- Update `config/models.yaml` and `config/render_parameters.yaml` as required. Refer to [models](#models) and  [render parameters](#parameters) for details.
 - Generate images
     - `blender -b -P src/render_blender.py`
 - Generate annotations
     - `python3 src/create_labels.py`
 
 ## Models
+Currently supports fbx/obj/blend. Ensure your models only contain one object that has the same name as its filename.
 
 ### Classes
 
@@ -49,7 +50,7 @@ Other objects which will be present in the scene. These won't be annotated.
 
 Textures that your scene may have. Explore possible textures from [texture haven](https://polyhaven.com/textures) and store all texture subfolders in a main folder.
 
-## Configurations
+## Parameters
 
 ### Occlusion awareness
 
